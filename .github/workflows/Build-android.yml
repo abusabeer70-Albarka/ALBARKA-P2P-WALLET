@@ -21,7 +21,7 @@ jobs:
           channel: stable
 
       - name: Create Android project files
-        run: flutter create . --platforms=android
+        run: flutter create . --project-name albarka_p2p_wallet --platforms=android
 
       - name: Install dependencies
         run: flutter pub get
