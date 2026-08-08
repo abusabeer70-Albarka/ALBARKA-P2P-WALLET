@@ -194,7 +194,7 @@ class ImportWalletScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             const TextField(
-              obscureText: true,
+              
               maxLines: 3,
               decoration: InputDecoration(
                 labelText: 'Recovery phrase',
