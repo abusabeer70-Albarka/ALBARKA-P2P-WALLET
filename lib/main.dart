@@ -60,8 +60,9 @@ class WelcomeScreen extends StatelessWidget {
                 filled: true,
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const CreateWalletScreen()),
-                ),
+              MaterialPageRoute(
+  builder: (_) => const CreateWalletScreen(),
+),
               ),
               const SizedBox(height: 14),
               _ActionButton(
