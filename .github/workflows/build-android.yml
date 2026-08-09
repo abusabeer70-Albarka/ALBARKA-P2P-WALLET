@@ -22,6 +22,14 @@ jobs:
       - name: Create Android project files
         run: flutter create . --project-name albarka_p2p_wallet --platforms=android
 
+      - name: Set ALBARKA P2P app icon
+        run: |
+          mkdir -p android/app/src/main/res/drawable
+          cp logo.png android/app/src/main/res/drawable/albarka_logo.png
+          
+          sed -i 's/android:icon="@mipmap\/ic_launcher"/android:icon="@drawable\/albarka_logo"/' android/app/src/main/AndroidManifest.xml
+          sed -i 's/android:roundIcon="@mipmap\/ic_launcher_round"/android:roundIcon="@drawable\/albarka_logo"/' android/app/src/main/AndroidManifest.xml
+
       - name: Install dependencies
         run: flutter pub get
 
