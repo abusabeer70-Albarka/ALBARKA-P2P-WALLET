@@ -24,9 +24,10 @@ jobs:
 
       - name: Set ALBARKA P2P app icon
         run: |
+          sudo apt-get update
+          sudo apt-get install -y imagemagick
           mkdir -p android/app/src/main/res/drawable
-          cp logo.png android/app/src/main/res/drawable/albarka_logo.png
-          
+          convert logo.png -strip -resize 512x512 -background none -alpha on android/app/src/main/res/drawable/albarka_logo.png
           sed -i 's/android:icon="@mipmap\/ic_launcher"/android:icon="@drawable\/albarka_logo"/' android/app/src/main/AndroidManifest.xml
           sed -i 's/android:roundIcon="@mipmap\/ic_launcher_round"/android:roundIcon="@drawable\/albarka_logo"/' android/app/src/main/AndroidManifest.xml
 
