@@ -13,8 +13,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   web3dart: ^3.0.3
   http: ^1.4.0
-
-
+  bip39: ^1.0.6
 
 dev_dependencies:
   flutter_test:
