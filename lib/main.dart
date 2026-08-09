@@ -54,25 +54,27 @@ class WelcomeScreen extends StatelessWidget {
                 'Secure • Fast • Reliable',
                 style: TextStyle(color: Color(0xFF55B9FF), fontSize: 16),
               ),
-              const SizedBox(height: 40),
-              _ActionButton(
-                text: 'Create New Wallet',
-                filled: true,
-                onTap: () => Navigator.push(
-                  context,
-              MaterialPageRoute(
-  builder: (_) => const CreateWalletScreen(),
+_ActionButton(
+  text: 'Create New Wallet',
+  filled: true,
+  onTap: () => Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const CreateWalletScreen(),
+    ),
+  ),
 ),
-              ),
-              const SizedBox(height: 14),
-              _ActionButton(
-                text: 'Import Existing Wallet',
-                filled: false,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ImportWalletScreen()),
-                ),
-              ),
+const SizedBox(height: 14),
+_ActionButton(
+  text: 'Import Existing Wallet',
+  filled: false,
+  onTap: () => Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const ImportWalletScreen(),
+    ),
+  ),
+),
               const Spacer(),
               const Text(
                 'Your keys. Your crypto. Your control.',
