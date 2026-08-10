@@ -273,7 +273,16 @@ class HomeScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _RoundAction(icon: Icons.arrow_upward, label: 'Send'),
-              _RoundAction(icon: Icons.qr_code_2, label: 'Receive'),
+             _RoundAction(
+  icon: Icons.qr_code_2,
+  label: 'Receive',
+  onTap: () => Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const ReceiveScreen(),
+    ),
+  ),
+),
               _RoundAction(icon: Icons.swap_horiz, label: 'Swap'),
               _RoundAction(icon: Icons.add_card, label: 'Buy'),
             ],
@@ -330,10 +339,84 @@ class _ActionButton extends StatelessWidget {
   }
 }
 
+class ReceiveScreen extends StatelessWidget {
+  const ReceiveScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    const address = 'Wallet address will appear here';
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF06152F),
+      appBar: AppBar(
+        title: const Text('Receive'),
+        backgroundColor: const Color(0xFF06152F),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            const SizedBox(height: 30),
+            const Icon(
+              Icons.qr_code_2,
+              size: 180,
+              color: Colors.white,
+            ),
+            const SizedBox(height: 30),
+            const Text(
+              'Receive Crypto',
+              style: TextStyle(
+                fontSize: 25,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              address,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white70),
+            ),
+            const SizedBox(height: 25),
+            ElevatedButton.icon(
+              onPressed: () {},
+              icon: const Icon(Icons.copy),
+              label: const Text('Copy Address'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 class _RoundAction extends StatelessWidget {
   final IconData icon;
   final String label;
+  final VoidCallback? onTap;
 
+  const _RoundAction({
+    required this.icon,
+    required this.label,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          CircleAvatar(
+            radius: 25,
+            backgroundColor: const Color(0xFF0D4EB5),
+            child: Icon(icon),
+          ),
+          const SizedBox(height: 7),
+          Text(label),
+        ],
+      ),
+    );
+  }
+}
   const _RoundAction({required this.icon, required this.label});
 
   @override
