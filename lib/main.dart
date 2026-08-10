@@ -417,20 +417,3 @@ class _RoundAction extends StatelessWidget {
     );
   }
 }
-  const _RoundAction({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        CircleAvatar(
-          radius: 25,
-          backgroundColor: const Color(0xFF0D4EB5),
-          child: Icon(icon),
-        ),
-        const SizedBox(height: 7),
-        Text(label),
-      ],
-    );
-  }
-}
