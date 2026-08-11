@@ -49,6 +49,42 @@ class WalletService {
     return address.with0x;
   }
 
+  Future<String> importWallet(String recoveryPhrase) async {
+    final mnemonic = Bip39Mnemonic.fromString(
+      recoveryPhrase.trim(),
+    );
+
+    final seed = Bip39SeedGenerator(mnemonic).generate();
+
+    final wallet = Bip44.fromSeed(seed, Bip44Coins.ethereum)
+        .deriveDefaultPath;
+
+    final privateKey = wallet.privateKey.raw;
+    final privateKeyHex = privateKey
+        .map((b) => b.toRadixString(16).padLeft(2, '0'))
+        .join();
+
+    final credentials = EthPrivateKey.fromHex(privateKeyHex);
+    final address = await credentials.address;
+
+    await _storage.write(
+      key: 'recovery_phrase',
+      value: mnemonic.toStr(),
+    );
+
+    await _storage.write(
+      key: 'private_key',
+      value: privateKeyHex,
+    );
+
+    await _storage.write(
+      key: 'wallet_address',
+      value: address.with0x,
+    );
+
+    return address.with0x;
+  }
+
   Future<String?> getAddress() async {
     return await _storage.read(key: 'wallet_address');
   }
