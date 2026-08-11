@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'services/wallet_service.dart';
 
 void main() {
   runApp(const AlbarkaApp());
@@ -88,8 +89,41 @@ _ActionButton(
   }
 }
 
-class CreateWalletScreen extends StatelessWidget {
+class CreateWalletScreen extends StatefulWidget {
   const CreateWalletScreen({super.key});
+
+  @override
+  State<CreateWalletScreen> createState() => _CreateWalletScreenState();
+}
+
+class _CreateWalletScreenState extends State<CreateWalletScreen> {
+  final WalletService _walletService = WalletService();
+
+  bool _creating = false;
+  String? _address;
+
+  Future<void> _createWallet() async {
+    setState(() => _creating = true);
+
+    try {
+      final address = await _walletService.createWallet();
+
+      if (!mounted) return;
+
+      setState(() {
+        _address = address;
+        _creating = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() => _creating = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Wallet creation failed: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -100,26 +134,65 @@ class CreateWalletScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(Icons.shield_outlined, size: 64, color: Color(0xFF39A8FF)),
+            const Icon(
+              Icons.shield_outlined,
+              size: 64,
+              color: Color(0xFF39A8FF),
+            ),
             const SizedBox(height: 24),
             const Text(
               'Create your wallet',
-              style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 30,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 12),
             const Text(
-              'The next secure step will generate a recovery phrase on your device. '
-              'Never send your recovery phrase to anyone.',
-              style: TextStyle(fontSize: 16, height: 1.5, color: Colors.white70),
+              'Your wallet will be generated securely on this device. '
+              'Keep your wallet credentials private and never share them.',
+              style: TextStyle(
+                fontSize: 16,
+                height: 1.5,
+                color: Colors.white70,
+              ),
             ),
+            const SizedBox(height: 24),
+            if (_address != null) ...[
+              const Text(
+                'Wallet Address',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              SelectableText(
+                _address!,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF55B9FF),
+                ),
+              ),
+            ],
             const Spacer(),
             _ActionButton(
-              text: 'Continue',
+              text: _creating
+                  ? 'Creating Wallet...'
+                  : _address == null
+                      ? 'Create New Wallet'
+                      : 'Continue',
               filled: true,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const BackupScreen()),
-              ),
+              onTap: _creating
+                  ? null
+                  : _address == null
+                      ? _createWallet
+                      : () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const BackupScreen(),
+                            ),
+                          ),
             ),
           ],
         ),
