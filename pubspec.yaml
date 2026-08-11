@@ -15,7 +15,7 @@ dependencies:
   http: ^1.4.0
   flutter_secure_storage: ^9.2.4
   qr_flutter: ^4.1.0
-  bip39_mnemonic: ^3.0.10
+  hd_wallet_kit: ^0.0.2
 dev_dependencies:
   flutter_test:
     sdk: flutter
