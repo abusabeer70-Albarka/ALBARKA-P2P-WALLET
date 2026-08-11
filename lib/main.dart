@@ -201,8 +201,42 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
   }
 }
 
-class BackupScreen extends StatelessWidget {
+class BackupScreen extends StatefulWidget {
   const BackupScreen({super.key});
+
+  @override
+  State<BackupScreen> createState() => _BackupScreenState();
+}
+
+class _BackupScreenState extends State<BackupScreen> {
+  final WalletService _walletService = WalletService();
+  String? _recoveryPhrase;
+  bool _loading = true;
+  bool _confirmed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _createWallet();
+  }
+
+  Future<void> _createWallet() async {
+    try {
+      await _walletService.createWallet();
+      final phrase = await _walletService.getRecoveryPhrase();
+      if (!mounted) return;
+      setState(() {
+        _recoveryPhrase = phrase;
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Wallet creation failed: ')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -219,31 +253,54 @@ class BackupScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             const Text(
-              'Production implementation will generate and display the BIP-39 '
-              'recovery phrase locally and securely.',
+              'Write down these 12 words and keep them somewhere safe. Anyone who has them can access your wallet.',
               style: TextStyle(color: Colors.white70, height: 1.5),
             ),
             const SizedBox(height: 24),
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: const Color(0xFF0B255D),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: const Color(0xFF1479FF)),
-              ),
-              child: const Text(
-                'TEST MODE\n\nRecovery phrase generation is intentionally not enabled in this UI scaffold.',
-                style: TextStyle(fontSize: 16, height: 1.5),
-              ),
+            Expanded(
+              child: _loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0B255D),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: const Color(0xFF1479FF)),
+                      ),
+                      child: SelectableText(
+                        _recoveryPhrase ?? 'Recovery phrase unavailable.',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          height: 1.7,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
             ),
-            const Spacer(),
-            _ActionButton(
-              text: 'Go to Wallet Demo',
-              filled: true,
-              onTap: () => Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const HomeScreen()),
+            const SizedBox(height: 16),
+            CheckboxListTile(
+              value: _confirmed,
+              onChanged: _recoveryPhrase == null
+                  ? null
+                  : (value) => setState(() => _confirmed = value ?? false),
+              title: const Text(
+                'I have safely written down my recovery phrase.',
               ),
+              contentPadding: EdgeInsets.zero,
+            ),
+            const SizedBox(height: 8),
+            _ActionButton(
+              text: 'Continue to Wallet',
+              filled: _confirmed,
+              onTap: _confirmed
+                  ? () => Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const HomeScreen(),
+                        ),
+                      )
+                  : () {},
             ),
           ],
         ),
