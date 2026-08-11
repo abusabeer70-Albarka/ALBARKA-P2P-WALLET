@@ -1,6 +1,8 @@
+import 'dart:math';
+import 'dart:typed_data';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:web3dart/web3dart.dart';
-import 'dart:math';
 
 class WalletService {
   final _storage = const FlutterSecureStorage();
@@ -8,18 +10,20 @@ class WalletService {
   Future<String> createWallet() async {
     final random = Random.secure();
 
-    final privateKeyBytes = List<int>.generate(
-      32,
-      (_) => random.nextInt(256),
+    final privateKeyBytes = Uint8List.fromList(
+      List<int>.generate(
+        32,
+        (_) => random.nextInt(256),
+      ),
     );
 
     final credentials = EthPrivateKey(privateKeyBytes);
 
-    final address = await credentials.extractAddress();
+    final address = await credentials.address;
 
     await _storage.write(
       key: 'private_key',
-      value: credentials.privateKeyInt.toRadixString(16),
+      value: credentials.privateKeyInt.toRadixString(16).padLeft(64, '0'),
     );
 
     await _storage.write(

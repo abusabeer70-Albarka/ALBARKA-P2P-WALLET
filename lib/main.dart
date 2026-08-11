@@ -184,7 +184,7 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
                       : 'Continue',
               filled: true,
               onTap: _creating
-                  ? null
+                  ? () {}
                   : _address == null
                       ? _createWallet
                       : () => Navigator.push(
