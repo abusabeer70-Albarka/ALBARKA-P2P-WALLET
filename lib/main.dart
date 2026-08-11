@@ -398,6 +398,7 @@ class _ImportWalletScreenState extends State<ImportWalletScreen> {
           const SizedBox(height: 20),
           _ActionButton(
             text: _loading ? 'Importing...' : 'Import Wallet',
+            filled: !_loading,
             onTap: _loading ? () {} : _importWallet,
           ),
         ],
