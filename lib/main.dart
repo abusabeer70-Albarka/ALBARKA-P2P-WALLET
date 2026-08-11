@@ -223,7 +223,6 @@ class _BackupScreenState extends State<BackupScreen> {
 
   Future<void> _createWallet() async {
     try {
-      await _walletService.createWallet();
       final phrase = await _walletService.getRecoveryPhrase();
       if (!mounted) return;
       setState(() {
