@@ -28,10 +28,10 @@ class WalletService {
 
     await _storage.write(
       key: 'wallet_address',
-      value: address.hex,
+      value: address.with0x,
     );
 
-    return address.hex;
+    return address.with0x;
   }
 
   Future<String?> getAddress() async {
