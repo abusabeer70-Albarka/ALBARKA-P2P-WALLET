@@ -309,43 +309,98 @@ class _BackupScreenState extends State<BackupScreen> {
   }
 }
 
-class ImportWalletScreen extends StatelessWidget {
+class ImportWalletScreen extends StatefulWidget {
   const ImportWalletScreen({super.key});
+
+  @override
+  State<ImportWalletScreen> createState() => _ImportWalletScreenState();
+}
+
+class _ImportWalletScreenState extends State<ImportWalletScreen> {
+  final WalletService _walletService = WalletService();
+  final TextEditingController _phraseController = TextEditingController();
+  bool _loading = false;
+
+  @override
+  void dispose() {
+    _phraseController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _importWallet() async {
+    final phrase = _phraseController.text.trim();
+
+    if (phrase.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter your recovery phrase.')),
+      );
+      return;
+    }
+
+    setState(() => _loading = true);
+
+    try {
+      await _walletService.importWallet(phrase);
+
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+      );
+    } catch (e) {
+
+      setState(() => _loading = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Invalid recovery phrase. Please check the words.'),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Import Wallet')),
-      body: Padding(
+      body: ListView(
         padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Import Existing Wallet',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+        children: [
+          const Text(
+            'Import Existing Wallet',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
             ),
-            const SizedBox(height: 20),
-            const TextField(
-              
-              maxLines: 3,
-              decoration: InputDecoration(
-                labelText: 'Recovery phrase',
-                hintText: 'Enter your recovery phrase',
-                border: OutlineInputBorder(),
-              ),
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Enter your 12-word recovery phrase to restore your wallet.',
+            style: TextStyle(
+              color: Colors.white70,
+              height: 1.5,
             ),
-            const Spacer(),
-            _ActionButton(
-              text: 'Import',
+          ),
+          const SizedBox(height: 24),
+          TextField(
+            controller: _phraseController,
+            maxLines: 4,
+            textInputAction: TextInputAction.done,
+            decoration: InputDecoration(
+              hintText: 'Enter your 12 recovery words',
               filled: true,
-              onTap: () => Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const HomeScreen()),
+              fillColor: const Color(0xFF0B255D),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(18),
               ),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 20),
+          _ActionButton(
+            text: _loading ? 'Importing...' : 'Import Wallet',
+            onTap: _loading ? () {} : _importWallet,
+          ),
+        ],
       ),
     );
   }
