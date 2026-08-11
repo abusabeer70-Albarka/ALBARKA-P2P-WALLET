@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'services/wallet_service.dart';
 
@@ -525,13 +526,50 @@ class _ActionButton extends StatelessWidget {
   }
 }
 
-class ReceiveScreen extends StatelessWidget {
+class ReceiveScreen extends StatefulWidget {
   const ReceiveScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    const address = 'Wallet address will appear here';
+  State<ReceiveScreen> createState() => _ReceiveScreenState();
+}
 
+class _ReceiveScreenState extends State<ReceiveScreen> {
+  final WalletService _walletService = WalletService();
+  String _address = 'Loading address...';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAddress();
+  }
+
+  Future<void> _loadAddress() async {
+    final address = await _walletService.getAddress();
+
+    if (!mounted) return;
+
+    setState(() {
+      _address = address ?? 'No wallet address found';
+    });
+  }
+
+  Future<void> _copyAddress() async {
+    if (_address == 'Loading address...' ||
+        _address == 'No wallet address found') {
+      return;
+    }
+
+    await Clipboard.setData(ClipboardData(text: _address));
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Address copied')),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF06152F),
       appBar: AppBar(
@@ -542,31 +580,36 @@ class ReceiveScreen extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            const SizedBox(height: 30),
-            const Icon(
-              Icons.qr_code_2,
-              size: 180,
-              color: Colors.white,
-            ),
-            const SizedBox(height: 30),
+            const SizedBox(height: 20),
             const Text(
               'Receive Crypto',
               style: TextStyle(
-                fontSize: 25,
+                fontSize: 28,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 16),
-            const Text(
-              address,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white70),
+            const SizedBox(height: 30),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0B255D),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: SelectableText(
+                _address,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 16,
+                  height: 1.5,
+                ),
+              ),
             ),
-            const SizedBox(height: 25),
-            ElevatedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.copy),
-              label: const Text('Copy Address'),
+            const SizedBox(height: 20),
+            _ActionButton(
+              text: 'Copy Address',
+              filled: true,
+              onTap: _copyAddress,
             ),
           ],
         ),
@@ -574,6 +617,7 @@ class ReceiveScreen extends StatelessWidget {
     );
   }
 }
+
 class _RoundAction extends StatelessWidget {
   final IconData icon;
   final String label;
