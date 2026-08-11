@@ -16,6 +16,7 @@ dependencies:
   flutter_secure_storage: ^9.2.4
   qr_flutter: ^4.1.0
   bip39_mnemonic: ^3.0.10
+  blockchain_utils: ^5.4.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
