@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:bip39_mnemonic/bip39_mnemonic.dart';
 import 'dart:typed_data';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
