@@ -13,6 +13,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Verify Sepolia RPC
+        run: |
+          git rev-parse --short HEAD
+          grep -n "https://rpc.sepolia.org" lib/services/wallet_service.dart
+          if grep -Rni "rcp.sepolia.org" lib; then
+            echo "ERROR: Old Sepolia RPC typo found"
+            exit 1
+          fi
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
