@@ -18,10 +18,13 @@ class WalletService {
     return await _client.getBlockNumber();
   }
 
-  Future<EtherAmount> getSepoliaBalance(String address) async {
-    final ethAddress = EthereumAddress.fromHex(address);
-    return await _client.getBalance(ethAddress);
-  }
+    Future<BigInt> getSepoliaBalance(String address) async {
+    final balance = await _client.getBalance(
+      EthereumAddress.fromHex(address),
+    );
+
+    return balance.getInWei;
+   }
 
 
 

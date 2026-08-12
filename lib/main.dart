@@ -442,8 +442,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     final balance = await _walletService.getSepoliaBalance(address);
-    final eth = balance.getValueInUnit(EtherUnit.ether);
-
+    final eth = balance.toDouble() / 1000000000000000000.0;
     if (!mounted) return;
 
     setState(() {
