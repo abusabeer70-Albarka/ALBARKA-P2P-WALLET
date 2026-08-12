@@ -441,7 +441,9 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Sepolia connection failed: ')),
+        SnackBar(
+          content: Text('Sepolia connection failed: $e'),
+        ),
       );
     }
   }
