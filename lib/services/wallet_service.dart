@@ -18,6 +18,10 @@ class WalletService {
     return await _client.getBlockNumber();
   }
 
+  Future<String> createWallet() async {
+    // Generate a standard 12-word BIP-39 English recovery phrase.
+    final mnemonic = Bip39MnemonicGenerator(Bip39Languages.english)
+        .fromWordsNumber(Bip39WordsNum.wordsNum12);
 
     // Convert the recovery phrase into the BIP-39 seed.
     final seed = Bip39SeedGenerator(mnemonic).generate();
