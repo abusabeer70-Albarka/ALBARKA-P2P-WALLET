@@ -45,7 +45,19 @@ jobs:
 
       - name: Build APK
         run: flutter build apk --release
+      - name: Inspect APK for Sepolia RPC
+        run: |
+          echo "Checking APK for old RPC..."
+          if strings build/app/outputs/flutter-apk/app-release.apk | grep -F "rcp.sepolia.org"; then
+            echo "ERROR: APK contains old RPC: rcp.sepolia.org"
+            exit 1
+          fi
 
+          if strings build/app/outputs/flutter-apk/app-release.apk | grep -F "rpc.sepolia.org"; then
+            echo "OK: APK contains rpc.sepolia.org"
+          else
+            echo "WARNING: rpc.sepolia.org not found as plain text in APK"
+          fi
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
