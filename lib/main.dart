@@ -546,7 +546,9 @@ class _ActionButton extends StatelessWidget {
 }
 
 class ReceiveScreen extends StatefulWidget {
-  const ReceiveScreen({super.key});
+  final String? address;
+
+  const ReceiveScreen({super.key, this.address});
 
   @override
   State<ReceiveScreen> createState() => _ReceiveScreenState();
