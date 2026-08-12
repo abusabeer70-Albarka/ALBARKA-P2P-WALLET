@@ -417,7 +417,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final WalletService _walletService = WalletService();
   String? _address;
-  String _sepoliaBalance = 'Not checked';
 
   @override
   void initState() {
@@ -433,39 +432,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
 
   Future<void> _testSepolia() async {
-  try {
-    final block = await _walletService.getSepoliaBlockNumber();
-    final address = await _walletService.getAddress();
-
-    if (address == null) {
-      throw Exception('No wallet address found');
+    try {
+      final block = await _walletService.getSepoliaBlockNumber();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Sepolia connected. Block: ')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Sepolia connection failed: ')),
+      );
     }
-
-    final balance = await _walletService.getSepoliaBalance(address);
-    final eth = balance.toDouble() / 1000000000000000000.0;
-    if (!mounted) return;
-
-    setState(() {
-      _sepoliaBalance = eth.toStringAsFixed(6);
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Sepolia connected. Block: $block | Balance: $_sepoliaBalance ETH',
-        ),
-      ),
-    );
-  } catch (e) {
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Sepolia test failed: $e'),
-      ),
-    );
   }
-}
+
   @override
   Widget build(BuildContext context) {
     final assets = [
