@@ -1,9 +1,22 @@
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
+
+
 import 'package:web3dart/web3dart.dart';
 
 class WalletService {
   final _storage = const FlutterSecureStorage();
+
+  static const String _sepoliaRpc =
+      'https://rpc.sepolia.org';
+
+  final Web3Client _client =
+      Web3Client(_sepoliaRpc, http.Client());
+
+  Future<int> getSepoliaBlockNumber() async {
+    return await _client.getBlockNumber();
+  }
 
   Future<String> createWallet() async {
     // Generate a standard 12-word BIP-39 English recovery phrase.
