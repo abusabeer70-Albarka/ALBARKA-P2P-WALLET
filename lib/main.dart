@@ -407,8 +407,28 @@ class _ImportWalletScreenState extends State<ImportWalletScreen> {
   }
 }
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final WalletService _walletService = WalletService();
+  String? _address;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAddress();
+  }
+
+  Future<void> _loadAddress() async {
+    final address = await _walletService.getAddress();
+    if (!mounted) return;
+    setState(() => _address = address);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -465,7 +485,7 @@ class HomeScreen extends StatelessWidget {
   onTap: () => Navigator.push(
     context,
     MaterialPageRoute(
-      builder: (_) => const ReceiveScreen(),
+      builder: (_) => ReceiveScreen(address: _address),
     ),
   ),
 ),
@@ -543,6 +563,11 @@ class _ReceiveScreenState extends State<ReceiveScreen> {
   }
 
   Future<void> _loadAddress() async {
+    if (widget.address != null) {
+      setState(() => _address = widget.address!);
+      return;
+    }
+
     final address = await _walletService.getAddress();
 
     if (!mounted) return;
