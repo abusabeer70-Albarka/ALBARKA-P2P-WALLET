@@ -22,6 +22,11 @@ jobs:
             exit 1
           fi
 
+      - name: Test Sepolia DNS
+        run: |
+          getent hosts rpc.sepolia.org
+          curl -I --max-time 10 https://rpc.sepolia.org
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
