@@ -18,6 +18,13 @@ class WalletService {
     return await _client.getBlockNumber();
   }
 
+  Future<EtherAmount> getSepoliaBalance(String address) async {
+    final ethAddress = EthereumAddress.fromHex(address);
+    return await _client.getBalance(ethAddress);
+  }
+
+
+
   Future<String> createWallet() async {
     // Generate a standard 12-word BIP-39 English recovery phrase.
     final mnemonic = Bip39MnemonicGenerator(Bip39Languages.english)
