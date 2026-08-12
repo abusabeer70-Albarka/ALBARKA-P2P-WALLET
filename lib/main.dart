@@ -430,6 +430,22 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _address = address);
   }
 
+
+  Future<void> _testSepolia() async {
+    try {
+      final block = await _walletService.getSepoliaBlockNumber();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Sepolia connected. Block: ')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Sepolia connection failed: ')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final assets = [
@@ -492,6 +508,14 @@ class _HomeScreenState extends State<HomeScreen> {
               _RoundAction(icon: Icons.swap_horiz, label: 'Swap'),
               _RoundAction(icon: Icons.add_card, label: 'Buy'),
             ],
+          ),
+          const SizedBox(height: 18),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _testSepolia,
+              child: const Text('Test Sepolia'),
+            ),
           ),
           const SizedBox(height: 24),
           const Text('Assets', style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold)),
