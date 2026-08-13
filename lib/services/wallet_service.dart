@@ -20,16 +20,18 @@ class WalletService {
     return await _client.getBlockNumber();
   }
 
-  Future<EtherAmount?> getSepoliaBalance() async {
-    final address = await getAddress();
+  Future<double?> getSepoliaBalance() async {
+    final privateKey = await getPrivateKey();
 
-    if (address == null || address.isEmpty) {
+    if (privateKey == null || privateKey.isEmpty) {
       return null;
     }
 
-    final ethereumAddress = EthereumAddress.fromHex(address);
+    final credentials = EthPrivateKey.fromHex(privateKey);
+    final address = await credentials.address;
+    final balance = await _client.getBalance(address);
 
-    return await _client.getBalance(ethereumAddress);
+    return balance.getValueInUnit(EtherUnit.ether);
   }
 
   Future<String> createWallet() async {

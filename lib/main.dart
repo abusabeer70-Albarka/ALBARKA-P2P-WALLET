@@ -582,7 +582,7 @@ class _EthereumAssetScreenState extends State<EthereumAssetScreen> {
       setState(() {
         _balance = balance == null
             ? 'No wallet'
-            : '${balance.getValueInUnit(EtherUnit.ether).toStringAsFixed(6)} ETH';
+            : '${balance.toStringAsFixed(6)} ETH';
       });
     } catch (_) {
       if (!mounted) return;
@@ -607,7 +607,7 @@ class _EthereumAssetScreenState extends State<EthereumAssetScreen> {
               ),
               borderRadius: BorderRadius.circular(22),
             ),
-            child: const Column(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
