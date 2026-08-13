@@ -533,7 +533,131 @@ class _HomeScreenState extends State<HomeScreen> {
                 title: Text(a.$1),
                 subtitle: Text(a.$2),
                 trailing: Text(a.$3, style: const TextStyle(fontWeight: FontWeight.bold)),
+                onTap: a.$2 == 'ETH'
+                    ? () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => EthereumAssetScreen(address: _address),
+                          ),
+                        )
+                    : null,
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
+class EthereumAssetScreen extends StatelessWidget {
+  final String address;
+
+  const EthereumAssetScreen({
+    super.key,
+    required this.address,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Ethereum'),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(18),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF0B3E9B), Color(0xFF06245C)],
+              ),
+              borderRadius: BorderRadius.circular(22),
+            ),
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Ethereum Balance',
+                  style: TextStyle(color: Colors.white70),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  '0.000000 ETH',
+                  style: TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 6),
+                Text(
+                  'Sepolia Test Network',
+                  style: TextStyle(color: Colors.white70),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            'Wallet Address',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFF081D49),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: SelectableText(address),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.arrow_upward),
+                  label: const Text('Send'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ReceiveScreen(address: address),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.qr_code_2),
+                  label: const Text('Receive'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            'Transactions',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 10),
+          const Card(
+            color: Color(0xFF081D49),
+            child: ListTile(
+              leading: Icon(Icons.receipt_long),
+              title: Text('No transactions yet'),
+              subtitle: Text('Your Ethereum transactions will appear here.'),
             ),
           ),
         ],
