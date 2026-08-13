@@ -483,7 +483,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               borderRadius: BorderRadius.circular(22),
             ),
-            child: const Column(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Total Balance', style: TextStyle(color: Colors.white70)),
@@ -551,13 +551,44 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 
-class EthereumAssetScreen extends StatelessWidget {
+class EthereumAssetScreen extends StatefulWidget {
   final String address;
 
   const EthereumAssetScreen({
     super.key,
     required this.address,
   });
+
+  @override
+  State<EthereumAssetScreen> createState() => _EthereumAssetScreenState();
+}
+
+class _EthereumAssetScreenState extends State<EthereumAssetScreen> {
+  final WalletService _walletService = WalletService();
+  String _balance = 'Loading...';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBalance();
+  }
+
+  Future<void> _loadBalance() async {
+    try {
+      final balance = await _walletService.getSepoliaBalance();
+
+      if (!mounted) return;
+
+      setState(() {
+        _balance = balance == null
+            ? 'No wallet'
+            : '${balance.getValueInUnit(EtherUnit.ether).toStringAsFixed(6)} ETH';
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _balance = 'Unable to load');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -585,7 +616,7 @@ class EthereumAssetScreen extends StatelessWidget {
                 ),
                 SizedBox(height: 8),
                 Text(
-                  '0.000000 ETH',
+                  _balance,
                   style: TextStyle(
                     fontSize: 30,
                     fontWeight: FontWeight.bold,
@@ -614,7 +645,7 @@ class EthereumAssetScreen extends StatelessWidget {
               color: const Color(0xFF081D49),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: SelectableText(address),
+            child: SelectableText(widget.address),
           ),
           const SizedBox(height: 24),
           Row(
@@ -633,7 +664,7 @@ class EthereumAssetScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => ReceiveScreen(address: address),
+                        builder: (_) => ReceiveScreen(address: widget.address),
                       ),
                     );
                   },
