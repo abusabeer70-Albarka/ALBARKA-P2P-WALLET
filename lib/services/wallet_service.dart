@@ -31,7 +31,7 @@ class WalletService {
     final address = await credentials.address;
     final balance = await _client.getBalance(address);
 
-    return balance.getValueInUnit(EtherUnit.ether);
+    return balance.getInWei.toDouble() / 1000000000000000000;
   }
 
   Future<String> createWallet() async {
