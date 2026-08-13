@@ -533,11 +533,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 title: Text(a.$1),
                 subtitle: Text(a.$2),
                 trailing: Text(a.$3, style: const TextStyle(fontWeight: FontWeight.bold)),
-                onTap: a.$2 == 'ETH'
+                onTap: a.$2 == 'ETH' && _address != null
                     ? () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => EthereumAssetScreen(address: _address),
+                            builder: (_) => EthereumAssetScreen(address: _address!),
                           ),
                         )
                     : null,
