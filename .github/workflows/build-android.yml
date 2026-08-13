@@ -63,11 +63,8 @@ jobs:
 
           echo "APK build completed successfully."
 
+
       - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: albarka-p2p-wallet-apk
-          path: build/app/outputs/flutter-apk/app-release.apk      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: albarka-p2p-wallet-apk
