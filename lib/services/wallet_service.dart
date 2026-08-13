@@ -9,8 +9,10 @@ class WalletService {
   final _storage = const FlutterSecureStorage();
 
   static const String _sepoliaRpc =
-      'https://rpc.sepolia.org';
-
+    String.fromEnvironment(
+  'ALCHEMY_SEPOLIA_RPC',
+  defaultValue: 'https://rpc.sepolia.org',
+);
   final Web3Client _client =
       Web3Client(_sepoliaRpc, http.Client());
 

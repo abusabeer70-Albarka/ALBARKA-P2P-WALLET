@@ -49,7 +49,10 @@ jobs:
         run: flutter pub get
 
       - name: Build APK
-        run: flutter build apk --release
+        env:
+          ALCHEMY_SEPOLIA_RPC: ${{ secrets.ALCHEMY_SEPOLIA_RPC }}
+        run: flutter build apk --release --dart-define=ALCHEMY_SEPOLIA_RPC="$ALCHEMY_SEPOLIA_RPC"
+
       - name: Inspect APK for Sepolia RPC
         run: |
           echo "Checking APK for old RPC..."
@@ -58,12 +61,13 @@ jobs:
             exit 1
           fi
 
-          if strings build/app/outputs/flutter-apk/app-release.apk | grep -F "rpc.sepolia.org"; then
-            echo "OK: APK contains rpc.sepolia.org"
-          else
-            echo "WARNING: rpc.sepolia.org not found as plain text in APK"
-          fi
+          echo "APK build completed successfully."
+
       - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: albarka-p2p-wallet-apk
+          path: build/app/outputs/flutter-apk/app-release.apk      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: albarka-p2p-wallet-apk
