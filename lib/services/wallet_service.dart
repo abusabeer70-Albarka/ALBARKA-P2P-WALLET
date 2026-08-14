@@ -125,4 +125,38 @@ class WalletService {
   Future<String?> getRecoveryPhrase() async {
     return await _storage.read(key: 'recovery_phrase');
   }
+
+  Future<String> sendSepoliaEth({
+    required String recipientAddress,
+    required String amountEth,
+  }) async {
+    final privateKey = await getPrivateKey();
+
+    if (privateKey == null || privateKey.isEmpty) {
+      throw Exception('Wallet private key not found.');
+    }
+
+    final credentials = EthPrivateKey.fromHex(privateKey);
+
+    final recipient = EthereumAddress.fromHex(recipientAddress);
+
+    final amountWei = EtherAmount.fromUnitAndValue(
+      EtherUnit.ether,
+      amountEth,
+    ).getInWei;
+
+    final transaction = Transaction(
+      to: recipient,
+      value: EtherAmount.inWei(amountWei),
+    );
+
+    final txHash = await _client.sendTransaction(
+      credentials,
+      transaction,
+      chainId: 11155111,
+    );
+
+    return txHash;
+  }
+
 }

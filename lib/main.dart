@@ -652,7 +652,14 @@ class _EthereumAssetScreenState extends State<EthereumAssetScreen> {
             children: [
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => SendScreen(senderAddress: widget.address),
+                      ),
+                    );
+                  },
                   icon: const Icon(Icons.arrow_upward),
                   label: const Text('Send'),
                 ),
@@ -725,6 +732,8 @@ class _ActionButton extends StatelessWidget {
     );
   }
 }
+
+
 
 class ReceiveScreen extends StatefulWidget {
   final String? address;
