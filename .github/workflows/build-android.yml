@@ -57,6 +57,14 @@ jobs:
           flutter pub deps | grep -A 3 -B 3 web3dart
           grep -n "web3dart" pubspec.lock
 
+      - name: Inspect web3dart package
+        run: |
+          WEB3DART_PATH=$(find "$PUB_CACHE" -maxdepth 4 -type d -name "web3dart-*" | head -1)
+          echo "web3dart path: $WEB3DART_PATH"
+          grep -R "class EthereumAddress" "$WEB3DART_PATH/lib" | head
+          grep -R "class EtherAmount" "$WEB3DART_PATH/lib" | head
+          grep -R "EtherUnit" "$WEB3DART_PATH/lib" | head
+
       - name: Analyze Flutter project
         run: flutter analyze
 
