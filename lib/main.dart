@@ -716,17 +716,7 @@ class _EthereumAssetScreenState extends State<EthereumAssetScreen> {
                   onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute<void>(
-                        builder: (context) => Scaffold(
-                          appBar: AppBar(
-                            title: const Text('Send ETH TEST'),
-                          ),
-                          body: const Center(
-                            child: Text(
-                              'DIRECT SEND TEST WORKS',
-                              style: TextStyle(fontSize: 24),
-                            ),
-                          ),
-                        ),
+                        builder: (_) => const SendScreen(),
                       ),
                     );
                   },
