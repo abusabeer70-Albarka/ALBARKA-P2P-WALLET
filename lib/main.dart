@@ -423,6 +423,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final WalletService _walletService = WalletService();
   String? _address;
+  int _selectedIndex = 0;
 
   @override
   void initState() {
@@ -470,14 +471,47 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(onPressed: () {}, icon: const Icon(Icons.notifications_none)),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Home'),
-          NavigationDestination(icon: Icon(Icons.show_chart), label: 'Markets'),
-          NavigationDestination(icon: Icon(Icons.apps), label: 'DApps'),
-          NavigationDestination(icon: Icon(Icons.settings_outlined), label: 'Settings'),
-        ],
-      ),
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: _selectedIndex,
+          onDestinationSelected: (index) {
+            setState(() {
+              _selectedIndex = index;
+            });
+
+            if (index != 0) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    index == 1
+                        ? 'Markets coming soon'
+                        : index == 2
+                            ? 'DApps coming soon'
+                            : 'Settings coming soon',
+                  ),
+                ),
+              );
+            }
+          },
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home),
+              label: 'Home',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.show_chart),
+              label: 'Markets',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.apps),
+              label: 'DApps',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.settings_outlined),
+              label: 'Settings',
+            ),
+          ],
+        ),
       body: ListView(
         padding: const EdgeInsets.all(18),
         children: [
@@ -502,19 +536,40 @@ class _HomeScreenState extends State<HomeScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _RoundAction(icon: Icons.arrow_upward, label: 'Send'),
-             _RoundAction(
-  icon: Icons.qr_code_2,
-  label: 'Receive',
-  onTap: () => Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => ReceiveScreen(address: _address),
-    ),
-  ),
-),
-              _RoundAction(icon: Icons.swap_horiz, label: 'Swap'),
-              _RoundAction(icon: Icons.add_card, label: 'Buy'),
+                _RoundAction(
+                  icon: Icons.arrow_upward,
+                  label: 'Send',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const SendScreen(),
+                    ),
+                  ),
+                ),
+                _RoundAction(
+                  icon: Icons.qr_code_2,
+                  label: 'Receive',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ReceiveScreen(address: _address),
+                    ),
+                  ),
+                ),
+                _RoundAction(
+                  icon: Icons.swap_horiz,
+                  label: 'Swap',
+                  onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Swap coming soon')),
+                  ),
+                ),
+                _RoundAction(
+                  icon: Icons.add_card,
+                  label: 'Buy',
+                  onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Buy coming soon')),
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: 18),
