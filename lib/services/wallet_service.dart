@@ -1,9 +1,7 @@
-import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
-
-
-import 'package:web3dart/web3dart.dart';
+import 'package:web3dart/core.dart';
+import 'package:web3dart/crypto.dart';
 
 class WalletService {
   final _storage = const FlutterSecureStorage();
@@ -28,7 +26,7 @@ class WalletService {
     }
 
     final credentials = EthPrivateKey.fromHex(privateKey);
-    final address = await credentials.address;
+    final address = credentials.address;
     final balance = await _client.getBalance(address);
 
     return balance.getInWei.toDouble() / 1000000000000000000;
@@ -57,7 +55,7 @@ class WalletService {
     // Create the Ethereum credentials from the derived private key.
     final credentials = EthPrivateKey.fromHex(privateKeyHex);
 
-    final address = await credentials.address;
+    final address = credentials.address;
 
     // Store sensitive wallet data locally.
     await _storage.write(
@@ -94,7 +92,7 @@ class WalletService {
         .join();
 
     final credentials = EthPrivateKey.fromHex(privateKeyHex);
-    final address = await credentials.address;
+    final address = credentials.address;
 
     await _storage.write(
       key: 'recovery_phrase',
