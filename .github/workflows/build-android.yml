@@ -83,6 +83,18 @@ jobs:
           sed -n '1,120p' "$WEB3DART_PATH/lib/web3dart.dart"
           grep -Rni "class Transaction" "$WEB3DART_PATH/lib" | head -10
 
+      - name: Inspect main.dart before analyze
+        run: |
+          echo "=== CURRENT COMMIT ==="
+          git rev-parse --short HEAD
+          echo "=== MAIN DART LOCATION ==="
+          pwd
+          find . -name main.dart -type f -print
+          echo "=== LIB MAIN DART 188-205 ==="
+          nl -ba lib/main.dart | sed -n "188,205p"
+          echo "=== BACKUPSCREEN ==="
+          grep -n -A6 -B2 "class BackupScreen" lib/main.dart
+
       - name: Analyze Flutter project
         run: flutter analyze
 
