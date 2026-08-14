@@ -126,6 +126,14 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
     }
   }
 
+  void _openBackupScreen() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => BackupScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -189,12 +197,7 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
                 if (_address == null) {
                   _createWallet();
                 } else {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const BackupScreen(),
-                    ),
-                  );
+                  _openBackupScreen();
                 }
               },
               ),
@@ -206,7 +209,7 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
 }
 
 class BackupScreen extends StatefulWidget {
-  const BackupScreen({super.key});
+  BackupScreen({super.key});
 
   @override
   State<BackupScreen> createState() => _BackupScreenState();
