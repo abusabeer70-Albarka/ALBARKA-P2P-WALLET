@@ -184,17 +184,20 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
                       ? 'Create New Wallet'
                       : 'Continue',
               filled: true,
-              onTap: _creating
-                  ? () {}
-                  : _address == null
-                      ? _createWallet
-                      : () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => BackupScreen(),
-                            ),
-                          ),
-            ),
+              onTap: () {
+                if (_creating) return;
+                if (_address == null) {
+                  _createWallet();
+                } else {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const BackupScreen(),
+                    ),
+                  );
+                }
+              },
+              ),
           ],
         ),
       ),
