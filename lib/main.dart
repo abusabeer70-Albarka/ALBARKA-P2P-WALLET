@@ -656,7 +656,7 @@ class _EthereumAssetScreenState extends State<EthereumAssetScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => SendScreen(senderAddress: widget.address),
+                        builder: (_) => SendScreen(),
                       ),
                     );
                   },
@@ -734,6 +734,162 @@ class _ActionButton extends StatelessWidget {
 }
 
 
+
+
+class SendScreen extends StatefulWidget {
+  const SendScreen({super.key});
+
+  @override
+  State<SendScreen> createState() => _SendScreenState();
+}
+
+class _SendScreenState extends State<SendScreen> {
+  final _addressController = TextEditingController();
+  final _amountController = TextEditingController();
+
+  final WalletService _walletService = WalletService();
+
+  bool _sending = false;
+
+  @override
+  void dispose() {
+    _addressController.dispose();
+    _amountController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _send() async {
+    final recipient = _addressController.text.trim();
+    final amount = _amountController.text.trim();
+
+    if (recipient.isEmpty || amount.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Enter recipient address and amount.'),
+        ),
+      );
+      return;
+    }
+
+    if (!recipient.startsWith('0x') || recipient.length != 42) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Invalid Ethereum address.'),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _sending = true;
+    });
+
+    try {
+      final txHash = await _walletService.sendSepoliaEth(
+        recipientAddress: recipient,
+        amountEth: amount,
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Transaction sent: $txHash'),
+          duration: const Duration(seconds: 8),
+        ),
+      );
+
+      _addressController.clear();
+      _amountController.clear();
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Send failed: $e'),
+          duration: const Duration(seconds: 6),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _sending = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Send ETH'),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Recipient Address',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _addressController,
+              autocorrect: false,
+              decoration: const InputDecoration(
+                hintText: '0x...',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Amount (ETH)',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _amountController,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              decoration: const InputDecoration(
+                hintText: '0.0001',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 30),
+            SizedBox(
+              height: 54,
+              child: FilledButton.icon(
+                onPressed: _sending ? null : _send,
+                icon: _sending
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Icon(Icons.arrow_upward),
+                label: Text(
+                  _sending ? 'Sending...' : 'Send ETH',
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class ReceiveScreen extends StatefulWidget {
   final String? address;
