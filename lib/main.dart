@@ -191,7 +191,7 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
                       : () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const BackupScreen(),
+                              builder: (_) => BackupScreen(),
                             ),
                           ),
             ),
