@@ -423,18 +423,37 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final WalletService _walletService = WalletService();
   String? _address;
+  String _ethBalance = '0.000000';
   int _selectedIndex = 0;
 
   @override
   void initState() {
     super.initState();
     _loadAddress();
+    _loadEthBalance();
   }
 
   Future<void> _loadAddress() async {
     final address = await _walletService.getAddress();
     if (!mounted) return;
     setState(() => _address = address);
+  }
+
+  Future<void> _loadEthBalance() async {
+    try {
+      final balance = await _walletService.getSepoliaBalance();
+
+      if (!mounted) return;
+
+      setState(() {
+        _ethBalance = balance == null
+            ? '0.000000'
+            : balance.toStringAsFixed(6);
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _ethBalance = '0.000000');
+    }
   }
 
 
@@ -459,7 +478,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final assets = [
       ('Bitcoin', 'BTC', '0.000000', Icons.currency_bitcoin),
-      ('Ethereum', 'ETH', '0.000000', Icons.diamond_outlined),
+      ('Ethereum', 'ETH', _ethBalance, Icons.diamond_outlined),
       ('BNB', 'BNB', '0.000000', Icons.token),
       ('USDT', 'USDT', '0.00', Icons.attach_money),
     ];
@@ -528,7 +547,13 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Text('Total Balance', style: TextStyle(color: Colors.white70)),
                 SizedBox(height: 8),
-                Text('\$0.00', style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold)),
+                Text(
+                  '$_ethBalance ETH',
+                  style: const TextStyle(
+                    fontSize: 34,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
           ),
