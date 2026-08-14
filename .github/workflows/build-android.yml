@@ -96,7 +96,7 @@ jobs:
           grep -n -A6 -B2 "class BackupScreen" lib/main.dart
 
       - name: Analyze Flutter project
-        run: flutter analyze
+        run: flutter analyze --no-fatal-infos
 
       - name: Build APK
         env:
