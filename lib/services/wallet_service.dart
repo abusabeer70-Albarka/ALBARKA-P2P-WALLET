@@ -70,10 +70,10 @@ class WalletService {
 
     await _storage.write(
       key: 'wallet_address',
-      value: address.with0x,
+      value: address.hexEip55,
     );
 
-    return address.with0x;
+    return address.hexEip55;
   }
 
   Future<String> importWallet(String recoveryPhrase) async {
@@ -106,10 +106,10 @@ class WalletService {
 
     await _storage.write(
       key: 'wallet_address',
-      value: address.with0x,
+      value: address.hexEip55,
     );
 
-    return address.with0x;
+    return address.hexEip55;
   }
 
   Future<String?> getAddress() async {
