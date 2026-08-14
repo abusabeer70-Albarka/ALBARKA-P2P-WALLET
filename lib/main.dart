@@ -659,26 +659,21 @@ class _EthereumAssetScreenState extends State<EthereumAssetScreen> {
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    try {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Opening Send...')),
-                      );
-
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (context) => const SendScreen(),
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (context) => Scaffold(
+                          appBar: AppBar(
+                            title: const Text('Send ETH TEST'),
+                          ),
+                          body: const Center(
+                            child: Text(
+                              'DIRECT SEND TEST WORKS',
+                              style: TextStyle(fontSize: 24),
+                            ),
+                          ),
                         ),
-                      );
-                    } catch (e, stack) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('SEND ERROR: $e'),
-                          duration: const Duration(seconds: 10),
-                        ),
-                      );
-                      debugPrint('SEND NAVIGATION ERROR: $e');
-                      debugPrint('$stack');
-                    }
+                      ),
+                    );
                   },
                   icon: const Icon(Icons.arrow_upward),
                   label: const Text('Send'),
