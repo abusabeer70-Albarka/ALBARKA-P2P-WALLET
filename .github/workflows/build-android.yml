@@ -75,6 +75,8 @@ jobs:
           grep -Rni "EthPrivateKey" "$WEB3DART_PATH/lib" | head -20
 
           echo "=== Transaction ==="
+          echo "=== web3dart.dart exports ==="
+          sed -n '1,120p' "$WEB3DART_PATH/lib/web3dart.dart"
           grep -Rni "class Transaction" "$WEB3DART_PATH/lib" | head -10
 
       - name: Analyze Flutter project
