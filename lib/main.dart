@@ -834,66 +834,10 @@ class _SendScreenState extends State<SendScreen> {
       appBar: AppBar(
         title: const Text('Send ETH'),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Text(
-              'Recipient Address',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _addressController,
-              autocorrect: false,
-              decoration: const InputDecoration(
-                hintText: '0x...',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Amount (ETH)',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _amountController,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              decoration: const InputDecoration(
-                hintText: '0.0001',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 30),
-            SizedBox(
-              height: 54,
-              child: FilledButton.icon(
-                onPressed: _sending ? null : _send,
-                icon: _sending
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Icon(Icons.arrow_upward),
-                label: Text(
-                  _sending ? 'Sending...' : 'Send ETH',
-                ),
-              ),
-            ),
-          ],
+      body: const Center(
+        child: Text(
+          'SEND SCREEN TEST',
+          style: TextStyle(fontSize: 24),
         ),
       ),
     );
