@@ -52,6 +52,14 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Verify web3dart
+        run: |
+          flutter pub deps | grep -A 3 -B 3 web3dart
+          grep -n "web3dart" pubspec.lock
+
+      - name: Analyze Flutter project
+        run: flutter analyze
+
       - name: Build APK
         env:
           ALCHEMY_SEPOLIA_RPC: ${{ secrets.ALCHEMY_SEPOLIA_RPC }}
