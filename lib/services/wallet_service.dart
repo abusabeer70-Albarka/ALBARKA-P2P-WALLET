@@ -135,13 +135,32 @@ class WalletService {
     }
 
     final credentials = EthPrivateKey.fromHex(privateKey);
-
     final recipient = EthereumAddress.fromHex(recipientAddress);
 
-    final amountWei = EtherAmount.fromUnitAndValue(
-      EtherUnit.ether,
-      amountEth,
-    ).getInWei;
+    // Convert decimal ETH to Wei safely.
+    // Example: 0.00001 ETH = 10000000000000 Wei.
+    final parts = amountEth.trim().split('.');
+    final wholePart = parts.isEmpty || parts[0].isEmpty ? '0' : parts[0];
+    final fractionPart = parts.length > 1 ? parts[1] : '';
+
+    if (parts.length > 2 ||
+        !RegExp(r'^\d+$').hasMatch(wholePart) ||
+        (fractionPart.isNotEmpty &&
+            !RegExp(r'^\d+$').hasMatch(fractionPart))) {
+      throw FormatException('Invalid ETH amount: $amountEth');
+    }
+
+    if (fractionPart.length > 18) {
+      throw FormatException('ETH amount has more than 18 decimal places.');
+    }
+
+    final paddedFraction = fractionPart.padRight(18, '0');
+    final amountWei = BigInt.parse(wholePart) * BigInt.from(10).pow(18) +
+        BigInt.parse(paddedFraction);
+
+    if (amountWei <= BigInt.zero) {
+      throw FormatException('ETH amount must be greater than zero.');
+    }
 
     final transaction = Transaction(
       to: recipient,
