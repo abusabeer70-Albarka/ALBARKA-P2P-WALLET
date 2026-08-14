@@ -659,10 +659,13 @@ class _EthereumAssetScreenState extends State<EthereumAssetScreen> {
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Opening Send...')),
+                    );
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => SendScreen(),
+                        builder: (_) => const SendScreen(),
                       ),
                     );
                   },
