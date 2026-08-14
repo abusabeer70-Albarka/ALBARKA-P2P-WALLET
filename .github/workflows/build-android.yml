@@ -61,9 +61,21 @@ jobs:
         run: |
           WEB3DART_PATH=$(find "$PUB_CACHE" -maxdepth 4 -type d -name "web3dart-*" | head -1)
           echo "web3dart path: $WEB3DART_PATH"
-          grep -R "class EthereumAddress" "$WEB3DART_PATH/lib" | head
-          grep -R "class EtherAmount" "$WEB3DART_PATH/lib" | head
-          grep -R "EtherUnit" "$WEB3DART_PATH/lib" | head
+
+          echo "=== EthereumAddress ==="
+          grep -Rni "EthereumAddress" "$WEB3DART_PATH/lib" | head -20
+
+          echo "=== EtherAmount ==="
+          grep -Rni "EtherAmount" "$WEB3DART_PATH/lib" | head -20
+
+          echo "=== EtherUnit ==="
+          grep -Rni "EtherUnit" "$WEB3DART_PATH/lib" | head -20
+
+          echo "=== EthPrivateKey ==="
+          grep -Rni "EthPrivateKey" "$WEB3DART_PATH/lib" | head -20
+
+          echo "=== Transaction ==="
+          grep -Rni "class Transaction" "$WEB3DART_PATH/lib" | head -10
 
       - name: Analyze Flutter project
         run: flutter analyze
