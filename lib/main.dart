@@ -895,10 +895,108 @@ class _SendScreenState extends State<SendScreen> {
       appBar: AppBar(
         title: const Text('Send ETH'),
       ),
-      body: const Center(
-        child: Text(
-          'SEND SCREEN TEST',
-          style: TextStyle(fontSize: 24),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Send Ethereum',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Send ETH on Sepolia Testnet',
+              style: TextStyle(
+                color: Colors.white70,
+              ),
+            ),
+            const SizedBox(height: 28),
+
+            const Text(
+              'Recipient Address',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            TextField(
+              controller: _addressController,
+              enabled: !_sending,
+              keyboardType: TextInputType.text,
+              decoration: const InputDecoration(
+                hintText: '0x...',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.account_balance_wallet),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            const Text(
+              'Amount (ETH)',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            TextField(
+              controller: _amountController,
+              enabled: !_sending,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              decoration: const InputDecoration(
+                hintText: '0.0001',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.currency_exchange),
+                suffixText: 'ETH',
+              ),
+            ),
+
+            const SizedBox(height: 30),
+
+            SizedBox(
+              height: 56,
+              child: FilledButton.icon(
+                onPressed: _sending ? null : _send,
+                icon: _sending
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Icon(Icons.send),
+                label: Text(
+                  _sending ? 'Sending...' : 'Send ETH',
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 18),
+
+            const Text(
+              'Network: Sepolia Testnet',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white54,
+                fontSize: 13,
+              ),
+            ),
+          ],
         ),
       ),
     );
