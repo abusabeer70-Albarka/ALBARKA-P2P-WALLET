@@ -442,7 +442,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final block = await _walletService.getSepoliaBlockNumber();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Sepolia connected. Block: ')),
+        SnackBar(content: Text('Sepolia connected. Block: $block')),
       );
     } catch (e) {
       if (!mounted) return;
