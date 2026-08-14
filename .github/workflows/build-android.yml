@@ -76,6 +76,8 @@ jobs:
 
           echo "=== Transaction ==="
           grep -Rni "class Transaction" "$WEB3DART_PATH/lib" | head -10
+          echo "=== web3dart.dart exports ==="
+          sed -n "1,240p" "$WEB3DART_PATH/lib/web3dart.dart"
 
       - name: Analyze Flutter project
         run: flutter analyze
