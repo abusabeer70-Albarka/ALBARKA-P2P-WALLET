@@ -230,59 +230,68 @@ return txHash;
 
     Future<List<Map<String, dynamic>>> fetchTransfers({
       required String direction,
+      required String category,
     }) async {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'jsonrpc': '2.0',
-          'id': 1,
-          'method': 'alchemy_getAssetTransfers',
-          'params': [
-            {
-              'fromBlock': '0x0',
-              'toBlock': 'latest',
-              if (direction == 'incoming')
-                'toAddress': walletAddress,
-              if (direction == 'outgoing')
-                'fromAddress': walletAddress,
-              'category': ['external', 'internal'],
-              'withMetadata': true,
-              'excludeZeroValue': true,
-              'maxCount': '0x64',
-            },
-          ],
-        }),
-      );
+      final results = <Map<String, dynamic>>[];
+      String? pageKey;
 
-      if (response.statusCode != 200) {
-        throw Exception(
-          'Alchemy request failed: ${response.statusCode}',
+      do {
+        final params = <String, dynamic>{
+          'fromBlock': '0x0',
+          'toBlock': 'latest',
+          if (direction == 'incoming')
+            'toAddress': walletAddress,
+          if (direction == 'outgoing')
+            'fromAddress': walletAddress,
+          'category': [category],
+          'withMetadata': true,
+          'excludeZeroValue': true,
+          'maxCount': '0x64',
+        };
+
+        if (pageKey != null && pageKey!.isNotEmpty) {
+          params['pageKey'] = pageKey;
+        }
+
+        final response = await http.post(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'jsonrpc': '2.0',
+            'id': 1,
+            'method': 'alchemy_getAssetTransfers',
+            'params': [params],
+          }),
         );
-      }
 
-      final data = jsonDecode(response.body);
+        if (response.statusCode != 200) {
+          throw Exception(
+            'Alchemy request failed: ${response.statusCode} '
+            '${response.body}',
+          );
+        }
 
-      if (data['error'] != null) {
-        throw Exception(
-          data['error']['message']?.toString() ??
-              'Alchemy API error.',
-        );
-      }
+        final data = jsonDecode(response.body);
 
-      final transfers = data['result']?['transfers'];
+        if (data['error'] != null) {
+          throw Exception(
+            data['error']['message']?.toString() ??
+                'Alchemy API error.',
+          );
+        }
 
-      if (transfers is! List) {
-        return [];
-      }
+        final transfers = data['result']?['transfers'];
 
-      return transfers
-          .whereType<Map>()
-          .map<Map<String, dynamic>>((tx) {
-            final hash = tx['hash']?.toString() ?? '';
-            final value = tx['value']?.toString() ?? '0';
-            final from = tx['from']?.toString() ?? '';
-            final to = tx['to']?.toString() ?? '';
+        if (transfers is List) {
+          for (final item in transfers.whereType<Map>()) {
+            final hash = item['hash']?.toString() ?? '';
+            final from = item['from']?.toString() ?? '';
+            final to = item['to']?.toString() ?? '';
+            final value = item['value']?.toString() ?? '0';
+
+            if (hash.isEmpty) {
+              continue;
+            }
 
             final isReceive =
                 to.toLowerCase() == normalizedWallet &&
@@ -292,42 +301,57 @@ return txHash;
                 from.toLowerCase() == normalizedWallet &&
                 to.toLowerCase() != normalizedWallet;
 
-            String type;
-            String address;
-
-            if (isReceive) {
-              type = 'Receive';
-              address = from;
-            } else if (isSend) {
-              type = 'Send';
-              address = to;
-            } else {
-              type = direction == 'incoming' ? 'Receive' : 'Send';
-              address = direction == 'incoming' ? from : to;
+            if (!isReceive && !isSend) {
+              continue;
             }
 
-            return {
+            results.add({
               'txHash': hash,
-              'type': type,
+              'type': isReceive ? 'Receive' : 'Send',
               'amount': value,
-              'address': address,
+              'address': isReceive ? from : to,
               'status': 'Success',
               'network': 'Sepolia',
               'timestamp':
-                  tx['metadata']?['blockTimestamp']?.toString() ??
+                  item['metadata']?['blockTimestamp']?.toString() ??
                       DateTime.now().toIso8601String(),
-            };
-          })
-          .where((tx) => tx['txHash'].toString().isNotEmpty)
-          .toList();
+            });
+          }
+        }
+
+        pageKey = data['result']?['pageKey']?.toString();
+      } while (pageKey != null && pageKey!.isNotEmpty);
+
+      return results;
     }
 
-    final incoming = await fetchTransfers(direction: 'incoming');
-    final outgoing = await fetchTransfers(direction: 'outgoing');
+    final externalIncoming = await fetchTransfers(
+      direction: 'incoming',
+      category: 'external',
+    );
 
-    final all = [...incoming, ...outgoing];
+    final externalOutgoing = await fetchTransfers(
+      direction: 'outgoing',
+      category: 'external',
+    );
 
-    // Remove duplicate hashes returned by both queries.
+    final internalIncoming = await fetchTransfers(
+      direction: 'incoming',
+      category: 'internal',
+    );
+
+    final internalOutgoing = await fetchTransfers(
+      direction: 'outgoing',
+      category: 'internal',
+    );
+
+    final all = [
+      ...externalIncoming,
+      ...externalOutgoing,
+      ...internalIncoming,
+      ...internalOutgoing,
+    ];
+
     final unique = <String, Map<String, dynamic>>{};
 
     for (final tx in all) {
