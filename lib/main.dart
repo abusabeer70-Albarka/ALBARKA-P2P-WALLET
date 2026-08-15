@@ -1,6 +1,7 @@
 import 'services/transaction_history_service.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 import 'services/wallet_service.dart';
 
 void main() {
@@ -691,6 +692,35 @@ class _EthereumAssetScreenState extends State<EthereumAssetScreen> {
     }
   }
 
+  String _formatTransactionDate(String? timestamp) {
+    if (timestamp == null || timestamp.isEmpty) {
+      return 'Unknown date';
+    }
+
+    try {
+      final date = DateTime.parse(timestamp).toLocal();
+
+      const months = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      ];
+
+      final hour = date.hour == 0
+          ? 12
+          : date.hour > 12
+              ? date.hour - 12
+              : date.hour;
+
+      final minute = date.minute.toString().padLeft(2, '0');
+      final period = date.hour >= 12 ? 'PM' : 'AM';
+
+      return '${date.day} ${months[date.month - 1]} ${date.year} • '
+          '$hour:$minute $period';
+    } catch (_) {
+      return timestamp;
+    }
+  }
+
   Future<void> _loadTransactions() async {
     final transactions = await _historyService.getTransactions();
 
@@ -825,10 +855,21 @@ class _EthereumAssetScreenState extends State<EthereumAssetScreen> {
                   ),
                   subtitle: Text(
                     'To: ${tx['address']}\n'
-                    'Status: ${tx['status']} • ${tx['network']}',
+                    'Status: ${tx['status']} • ${tx['network']}\n'
+                    'Date: ${_formatTransactionDate(tx['timestamp'] as String?)}',
                   ),
                   isThreeLine: true,
-                  trailing: const Icon(Icons.check_circle),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => TransactionDetailsScreen(
+                          transaction: tx,
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -1190,6 +1231,155 @@ class _RoundAction extends StatelessWidget {
           ),
           const SizedBox(height: 7),
           Text(label),
+        ],
+      ),
+    );
+  }
+}
+
+class TransactionDetailsScreen extends StatelessWidget {
+  final Map<String, dynamic> transaction;
+
+  const TransactionDetailsScreen({
+    super.key,
+    required this.transaction,
+  });
+
+  String _formatDate(String? timestamp) {
+    if (timestamp == null || timestamp.isEmpty) {
+      return 'Unknown date';
+    }
+
+    try {
+      final date = DateTime.parse(timestamp).toLocal();
+
+      const months = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      ];
+
+      final hour = date.hour == 0
+          ? 12
+          : date.hour > 12
+              ? date.hour - 12
+              : date.hour;
+
+      final minute = date.minute.toString().padLeft(2, '0');
+      final period = date.hour >= 12 ? 'PM' : 'AM';
+
+      return '${date.day} ${months[date.month - 1]} ${date.year} • '
+          '$hour:$minute $period';
+    } catch (_) {
+      return timestamp;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final txHash = transaction['txHash']?.toString() ?? '';
+    final amount = transaction['amount']?.toString() ?? '0';
+    final address = transaction['address']?.toString() ?? '';
+    final status = transaction['status']?.toString() ?? 'Unknown';
+    final network = transaction['network']?.toString() ?? 'Sepolia';
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Transaction Details'),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          const Icon(
+            Icons.check_circle,
+            color: Colors.greenAccent,
+            size: 72,
+          ),
+          const SizedBox(height: 12),
+          const Center(
+            child: Text(
+              'Transaction Successful',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(height: 28),
+          _detailRow('Amount', '$amount ETH'),
+          _detailRow('To', address),
+          _detailRow('Status', status),
+          _detailRow('Network', network),
+          _detailRow(
+            'Date & Time',
+            _formatDate(transaction['timestamp']?.toString()),
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Transaction Hash',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          SelectableText(
+            txHash,
+            style: const TextStyle(fontSize: 13),
+          ),
+          const SizedBox(height: 28),
+          SizedBox(
+            height: 52,
+            child: FilledButton.icon(
+              onPressed: () async {
+                final receipt = '''
+ALBARKA P2P WALLET
+Transaction Receipt
+
+Status: $status
+Amount: $amount ETH
+To: $address
+Network: $network
+Date & Time: ${_formatDate(transaction['timestamp']?.toString())}
+
+Transaction Hash:
+$txHash
+''';
+
+                await Share.share(
+                  receipt,
+                  subject: 'ALBARKA P2P WALLET Transaction Receipt',
+                );
+              },
+              icon: const Icon(Icons.share),
+              label: const Text('Share Transaction Receipt'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _detailRow(String title, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 5),
+          SelectableText(
+            value,
+            style: const TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
