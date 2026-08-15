@@ -211,7 +211,7 @@ await _historyService.addTransaction(
 return txHash;
   }
 
-  Future<List<Map<String, dynamic>>> getIncomingEthTransactions() async {
+  Future<List<Map<String, dynamic>>> getBlockchainTransactions() async {
     final walletAddress = await getAddress();
 
     if (walletAddress == null || walletAddress.isEmpty) {
@@ -226,79 +226,90 @@ return txHash;
       'https://eth-sepolia.g.alchemy.com/v2/$_alchemyApiKey',
     );
 
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'jsonrpc': '2.0',
-        'id': 1,
-        'method': 'alchemy_getAssetTransfers',
-        'params': [
-          {
-            'fromBlock': '0x0',
-            'toBlock': 'latest',
-            'toAddress': walletAddress,
-            'category': ['external'],
-            'withMetadata': true,
-            'excludeZeroValue': true,
-            'maxCount': '0x32',
-          },
-        ],
-      }),
-    );
-
-    if (response.statusCode != 200) {
-      throw Exception(
-        'Alchemy request failed: ${response.statusCode}',
+    Future<List<Map<String, dynamic>>> fetchTransfers({
+      required String direction,
+    }) async {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'jsonrpc': '2.0',
+          'id': 1,
+          'method': 'alchemy_getAssetTransfers',
+          'params': [
+            {
+              'fromBlock': '0x0',
+              'toBlock': 'latest',
+              direction == 'incoming'
+                  ? 'toAddress'
+                  : 'fromAddress': walletAddress,
+              'category': ['external'],
+              'withMetadata': true,
+              'excludeZeroValue': true,
+              'maxCount': '0x64',
+            },
+          ],
+        }),
       );
-    }
 
-    final data = jsonDecode(response.body);
-
-    if (data['error'] != null) {
-      throw Exception(
-        data['error']['message']?.toString() ??
-            'Alchemy API error.',
-      );
-    }
-
-    final transfers = data['result']?['transfers'];
-
-    if (transfers is! List) {
-      return [];
-    }
-
-    return transfers
-        .whereType<Map>()
-        .map<Map<String, dynamic>>((tx) {
-          return {
-            'txHash': tx['hash']?.toString() ?? '',
-            'type': 'Receive',
-            'amount': tx['value']?.toString() ?? '0',
-            'address': tx['from']?.toString() ?? '',
-            'status': 'Success',
-            'network': 'Sepolia',
-            'timestamp':
-                tx['metadata']?['blockTimestamp']?.toString() ??
-                    DateTime.now().toIso8601String(),
-          };
-        })
-        .toList();
-  }
-
-  Future<void> syncIncomingTransactions() async {
-    final incoming = await getIncomingEthTransactions();
-
-    for (final tx in incoming) {
-      final txHash = tx['txHash']?.toString() ?? '';
-
-      if (txHash.isEmpty) {
-        continue;
+      if (response.statusCode != 200) {
+        throw Exception(
+          'Alchemy request failed: ${response.statusCode}',
+        );
       }
 
+      final data = jsonDecode(response.body);
+
+      if (data['error'] != null) {
+        throw Exception(
+          data['error']['message']?.toString() ??
+              'Alchemy API error.',
+        );
+      }
+
+      final transfers = data['result']?['transfers'];
+
+      if (transfers is! List) {
+        return [];
+      }
+
+      return transfers
+          .whereType<Map>()
+          .map<Map<String, dynamic>>((tx) {
+            final value = tx['value']?.toString() ?? '0';
+            final hash = tx['hash']?.toString() ?? '';
+            final from = tx['from']?.toString() ?? '';
+            final to = tx['to']?.toString() ?? '';
+
+            return {
+              'txHash': hash,
+              'type': direction == 'incoming' ? 'Receive' : 'Send',
+              'amount': value,
+              'address': direction == 'incoming' ? from : to,
+              'status': 'Success',
+              'network': 'Sepolia',
+              'timestamp':
+                  tx['metadata']?['blockTimestamp']?.toString() ??
+                      DateTime.now().toIso8601String(),
+            };
+          })
+          .where((tx) => tx['txHash'].toString().isNotEmpty)
+          .toList();
+    }
+
+    final incoming = await fetchTransfers(direction: 'incoming');
+    final outgoing = await fetchTransfers(direction: 'outgoing');
+
+    return [...incoming, ...outgoing];
+  }
+
+  Future<void> syncBlockchainTransactions() async {
+    final blockchainTransactions = await getBlockchainTransactions();
+
+    for (final tx in blockchainTransactions) {
       await _historyService.addTransaction(
-        txHash: txHash,
-        type: 'Receive',
+        txHash: tx['txHash']?.toString() ?? '',
+        type: tx['type']?.toString() ?? 'Send',
         amount: tx['amount']?.toString() ?? '0',
         address: tx['address']?.toString() ?? '',
         status: tx['status']?.toString() ?? 'Success',

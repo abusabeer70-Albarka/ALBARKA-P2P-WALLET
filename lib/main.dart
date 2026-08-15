@@ -673,7 +673,7 @@ class _EthereumAssetScreenState extends State<EthereumAssetScreen> {
   void initState() {
     super.initState();
     _loadBalance();
-    _syncIncomingTransactions();
+    _syncBlockchainTransactions();
     _loadTransactions();
   }
 
@@ -723,9 +723,9 @@ class _EthereumAssetScreenState extends State<EthereumAssetScreen> {
     }
   }
 
-  Future<void> _syncIncomingTransactions() async {
+  Future<void> _syncBlockchainTransactions() async {
     try {
-      await _walletService.syncIncomingTransactions();
+      await _walletService.syncBlockchainTransactions();
       await _loadTransactions();
     } catch (_) {
       // Keep the Ethereum screen usable if the history API is unavailable.
