@@ -548,7 +548,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text('Total Balance', style: TextStyle(color: Colors.white70)),
                 SizedBox(height: 8),
                 Text(
-                  '$_ethBalance ETH',
+                  '\$${((double.tryParse(_ethBalance) ?? 0) * _ethUsdPrice).toStringAsFixed(2)}',
                   style: const TextStyle(
                     fontSize: 34,
                     fontWeight: FontWeight.bold,
