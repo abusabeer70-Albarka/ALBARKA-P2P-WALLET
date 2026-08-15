@@ -206,3 +206,6 @@ await _historyService.addTransaction(
 );
 
 return txHash;
+
+  }
+}
