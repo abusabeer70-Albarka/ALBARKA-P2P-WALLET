@@ -240,10 +240,11 @@ return txHash;
             {
               'fromBlock': '0x0',
               'toBlock': 'latest',
-              direction == 'incoming'
-                  ? 'toAddress'
-                  : 'fromAddress': walletAddress,
-              'category': ['external'],
+              if (direction == 'incoming')
+                'toAddress': walletAddress,
+              if (direction == 'outgoing')
+                'fromAddress': walletAddress,
+              'category': ['external', 'internal'],
               'withMetadata': true,
               'excludeZeroValue': true,
               'maxCount': '0x64',
