@@ -209,9 +209,7 @@ await _historyService.addTransaction(
 );
 
 return txHash;
-
-
-
+  }
 
   Future<List<Map<String, dynamic>>> getIncomingEthTransactions() async {
     final walletAddress = await getAddress();
