@@ -1339,8 +1339,10 @@ class TransactionDetailsScreen extends StatelessWidget {
     final txHash = transaction['txHash']?.toString() ?? '';
     final amount = transaction['amount']?.toString() ?? '0';
     final address = transaction['address']?.toString() ?? '';
+    final type = transaction['type']?.toString() ?? 'Send';
     final status = transaction['status']?.toString() ?? 'Unknown';
     final network = transaction['network']?.toString() ?? 'Sepolia';
+    final addressLabel = type == 'Receive' ? 'From' : 'To';
 
     return Scaffold(
       appBar: AppBar(
@@ -1366,7 +1368,7 @@ class TransactionDetailsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 28),
           _detailRow('Amount', '$amount ETH'),
-          _detailRow('To', address),
+          _detailRow(addressLabel, address),
           _detailRow('Status', status),
           _detailRow('Network', network),
           _detailRow(
@@ -1397,7 +1399,7 @@ Transaction Receipt
 
 Status: $status
 Amount: $amount ETH
-To: $address
+$addressLabel: $address
 Network: $network
 Date & Time: ${_formatDate(transaction['timestamp']?.toString())}
 
