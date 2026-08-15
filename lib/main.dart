@@ -727,8 +727,15 @@ class _EthereumAssetScreenState extends State<EthereumAssetScreen> {
     try {
       await _walletService.syncBlockchainTransactions();
       await _loadTransactions();
-    } catch (_) {
-      // Keep the Ethereum screen usable if the history API is unavailable.
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Transaction sync failed: $e'),
+          duration: const Duration(seconds: 8),
+        ),
+      );
     }
   }
 
