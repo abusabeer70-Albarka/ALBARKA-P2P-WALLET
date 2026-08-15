@@ -441,25 +441,28 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadEthBalance() async {
+    double? balance;
+    double? price;
+
     try {
-      final balance = await _walletService.getSepoliaBalance();
-      final price = await _walletService.getEthUsdPrice();
+      balance = await _walletService.getSepoliaBalance();
+    } catch (_) {}
 
-      if (!mounted) return;
+    try {
+      price = await _walletService.getEthUsdPrice();
+    } catch (_) {}
 
-      setState(() {
-        _ethBalance = balance == null
-            ? '0.000000'
-            : balance.toStringAsFixed(6);
+    if (!mounted) return;
+
+    setState(() {
+      if (balance != null) {
+        _ethBalance = balance.toStringAsFixed(6);
+      }
+
+      if (price != null) {
         _ethUsdPrice = price;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _ethBalance = '0.000000';
-        _ethUsdPrice = 0.0;
-      });
-    }
+      }
+    });
   }
 
 
