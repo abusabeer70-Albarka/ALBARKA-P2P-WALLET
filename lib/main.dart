@@ -424,6 +424,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final WalletService _walletService = WalletService();
   String? _address;
   String _ethBalance = '0.000000';
+  double _ethUsdPrice = 0.0;
   int _selectedIndex = 0;
 
   @override
@@ -442,6 +443,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadEthBalance() async {
     try {
       final balance = await _walletService.getSepoliaBalance();
+      final price = await _walletService.getEthUsdPrice();
 
       if (!mounted) return;
 
@@ -449,10 +451,14 @@ class _HomeScreenState extends State<HomeScreen> {
         _ethBalance = balance == null
             ? '0.000000'
             : balance.toStringAsFixed(6);
+        _ethUsdPrice = price;
       });
     } catch (_) {
       if (!mounted) return;
-      setState(() => _ethBalance = '0.000000');
+      setState(() {
+        _ethBalance = '0.000000';
+        _ethUsdPrice = 0.0;
+      });
     }
   }
 
