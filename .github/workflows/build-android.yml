@@ -101,6 +101,7 @@ jobs:
       - name: Build APK
         env:
           ALCHEMY_SEPOLIA_RPC: ${{ secrets.ALCHEMY_SEPOLIA_RPC }}
+          ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
         run: |
           if [ -z "$ALCHEMY_SEPOLIA_RPC" ]; then
             echo "ERROR: ALCHEMY_SEPOLIA_RPC secret is empty."
@@ -113,7 +114,15 @@ jobs:
           fi
 
           echo "ALCHEMY_SEPOLIA_RPC is configured correctly."
-          flutter build apk --release --dart-define=ALCHEMY_SEPOLIA_RPC="$ALCHEMY_SEPOLIA_RPC"
+          if [ -z "$ALCHEMY_API_KEY" ]; then
+            echo "ERROR: ALCHEMY_API_KEY secret is empty."
+            exit 1
+          fi
+
+          echo "ALCHEMY_API_KEY is configured."
+          flutter build apk --release \
+            --dart-define=ALCHEMY_SEPOLIA_RPC="$ALCHEMY_SEPOLIA_RPC" \
+            --dart-define=ALCHEMY_API_KEY="$ALCHEMY_API_KEY"
 
       - name: Inspect APK for Sepolia RPC
         run: |
