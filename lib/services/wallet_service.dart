@@ -226,6 +226,8 @@ return txHash;
       'https://eth-sepolia.g.alchemy.com/v2/$_alchemyApiKey',
     );
 
+    final normalizedWallet = walletAddress.toLowerCase();
+
     Future<List<Map<String, dynamic>>> fetchTransfers({
       required String direction,
     }) async {
@@ -277,16 +279,38 @@ return txHash;
       return transfers
           .whereType<Map>()
           .map<Map<String, dynamic>>((tx) {
-            final value = tx['value']?.toString() ?? '0';
             final hash = tx['hash']?.toString() ?? '';
+            final value = tx['value']?.toString() ?? '0';
             final from = tx['from']?.toString() ?? '';
             final to = tx['to']?.toString() ?? '';
 
+            final isReceive =
+                to.toLowerCase() == normalizedWallet &&
+                from.toLowerCase() != normalizedWallet;
+
+            final isSend =
+                from.toLowerCase() == normalizedWallet &&
+                to.toLowerCase() != normalizedWallet;
+
+            String type;
+            String address;
+
+            if (isReceive) {
+              type = 'Receive';
+              address = from;
+            } else if (isSend) {
+              type = 'Send';
+              address = to;
+            } else {
+              type = direction == 'incoming' ? 'Receive' : 'Send';
+              address = direction == 'incoming' ? from : to;
+            }
+
             return {
               'txHash': hash,
-              'type': direction == 'incoming' ? 'Receive' : 'Send',
+              'type': type,
               'amount': value,
-              'address': direction == 'incoming' ? from : to,
+              'address': address,
               'status': 'Success',
               'network': 'Sepolia',
               'timestamp':
@@ -301,7 +325,16 @@ return txHash;
     final incoming = await fetchTransfers(direction: 'incoming');
     final outgoing = await fetchTransfers(direction: 'outgoing');
 
-    return [...incoming, ...outgoing];
+    final all = [...incoming, ...outgoing];
+
+    // Remove duplicate hashes returned by both queries.
+    final unique = <String, Map<String, dynamic>>{};
+
+    for (final tx in all) {
+      unique[tx['txHash'].toString()] = tx;
+    }
+
+    return unique.values.toList();
   }
 
   Future<void> syncBlockchainTransactions() async {

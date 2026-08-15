@@ -857,15 +857,19 @@ class _EthereumAssetScreenState extends State<EthereumAssetScreen> {
               (tx) => Card(
                 color: const Color(0xFF081D49),
                 child: ListTile(
-                  leading: const Icon(
-                    Icons.arrow_upward,
-                    color: Colors.redAccent,
+                  leading: Icon(
+                    tx['type']?.toString() == 'Receive'
+                        ? Icons.arrow_downward
+                        : Icons.arrow_upward,
+                    color: tx['type']?.toString() == 'Receive'
+                        ? Colors.greenAccent
+                        : Colors.redAccent,
                   ),
                   title: Text(
                     '${tx['type']} • ${tx['amount']} ETH',
                   ),
                   subtitle: Text(
-                    'To: ${tx['address']}\n'
+                    '${tx['type']?.toString() == 'Receive' ? 'From' : 'To'}: ${tx['address']}\n'
                     'Status: ${tx['status']} • ${tx['network']}\n'
                     'Date: ${_formatTransactionDate(tx['timestamp'] as String?)}',
                   ),
