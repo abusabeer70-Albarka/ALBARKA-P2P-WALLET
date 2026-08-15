@@ -2,6 +2,7 @@ import 'services/transaction_history_service.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'services/wallet_service.dart';
 
 void main() {
@@ -1178,6 +1179,39 @@ class _ReceiveScreenState extends State<ReceiveScreen> {
               ),
             ),
             const SizedBox(height: 30),
+            if (_address != 'Loading address...' &&
+                _address != 'No wallet address found')
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: QrImageView(
+                  data: _address,
+                  size: 220,
+                  backgroundColor: Colors.white,
+                ),
+              ),
+            const SizedBox(height: 12),
+            const Text(
+              'Scan this QR code to receive ETH',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Sepolia Test Network',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.amber,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 24),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -1199,6 +1233,22 @@ class _ReceiveScreenState extends State<ReceiveScreen> {
               text: 'Copy Address',
               filled: true,
               onTap: _copyAddress,
+            ),
+            const SizedBox(height: 12),
+            _ActionButton(
+              text: 'Share Address',
+              filled: false,
+              onTap: () async {
+                if (_address == 'Loading address...' ||
+                    _address == 'No wallet address found') {
+                  return;
+                }
+
+                await Share.share(
+                  'My ALBARKA P2P WALLET address:\n\n$_address',
+                  subject: 'ALBARKA P2P WALLET Address',
+                );
+              },
             ),
           ],
         ),
