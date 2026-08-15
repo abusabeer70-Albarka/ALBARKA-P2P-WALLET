@@ -673,6 +673,7 @@ class _EthereumAssetScreenState extends State<EthereumAssetScreen> {
   void initState() {
     super.initState();
     _loadBalance();
+    _syncIncomingTransactions();
     _loadTransactions();
   }
 
@@ -719,6 +720,15 @@ class _EthereumAssetScreenState extends State<EthereumAssetScreen> {
           '$hour:$minute $period';
     } catch (_) {
       return timestamp;
+    }
+  }
+
+  Future<void> _syncIncomingTransactions() async {
+    try {
+      await _walletService.syncIncomingTransactions();
+      await _loadTransactions();
+    } catch (_) {
+      // Keep the Ethereum screen usable if the history API is unavailable.
     }
   }
 

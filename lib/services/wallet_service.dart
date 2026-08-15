@@ -13,6 +13,9 @@ class WalletService {
   'ALCHEMY_SEPOLIA_RPC',
   defaultValue: 'https://rpc.sepolia.org',
 );
+
+  static const String _alchemyApiKey =
+      String.fromEnvironment('ALCHEMY_API_KEY');
   final Web3Client _client =
       Web3Client(_sepoliaRpc, http.Client());
 
@@ -207,5 +210,104 @@ await _historyService.addTransaction(
 
 return txHash;
 
+
+
+
+  Future<List<Map<String, dynamic>>> getIncomingEthTransactions() async {
+    final walletAddress = await getAddress();
+
+    if (walletAddress == null || walletAddress.isEmpty) {
+      return [];
+    }
+
+    if (_alchemyApiKey.isEmpty) {
+      throw Exception('ALCHEMY_API_KEY is not configured.');
+    }
+
+    final url = Uri.parse(
+      'https://eth-sepolia.g.alchemy.com/v2/$_alchemyApiKey',
+    );
+
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'jsonrpc': '2.0',
+        'id': 1,
+        'method': 'alchemy_getAssetTransfers',
+        'params': [
+          {
+            'fromBlock': '0x0',
+            'toBlock': 'latest',
+            'toAddress': walletAddress,
+            'category': ['external'],
+            'withMetadata': true,
+            'excludeZeroValue': true,
+            'maxCount': '0x32',
+          },
+        ],
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        'Alchemy request failed: ${response.statusCode}',
+      );
+    }
+
+    final data = jsonDecode(response.body);
+
+    if (data['error'] != null) {
+      throw Exception(
+        data['error']['message']?.toString() ??
+            'Alchemy API error.',
+      );
+    }
+
+    final transfers = data['result']?['transfers'];
+
+    if (transfers is! List) {
+      return [];
+    }
+
+    return transfers
+        .whereType<Map>()
+        .map<Map<String, dynamic>>((tx) {
+          return {
+            'txHash': tx['hash']?.toString() ?? '',
+            'type': 'Receive',
+            'amount': tx['value']?.toString() ?? '0',
+            'address': tx['from']?.toString() ?? '',
+            'status': 'Success',
+            'network': 'Sepolia',
+            'timestamp':
+                tx['metadata']?['blockTimestamp']?.toString() ??
+                    DateTime.now().toIso8601String(),
+          };
+        })
+        .toList();
   }
+
+  Future<void> syncIncomingTransactions() async {
+    final incoming = await getIncomingEthTransactions();
+
+    for (final tx in incoming) {
+      final txHash = tx['txHash']?.toString() ?? '';
+
+      if (txHash.isEmpty) {
+        continue;
+      }
+
+      await _historyService.addTransaction(
+        txHash: txHash,
+        type: 'Receive',
+        amount: tx['amount']?.toString() ?? '0',
+        address: tx['address']?.toString() ?? '',
+        status: tx['status']?.toString() ?? 'Success',
+        network: tx['network']?.toString() ?? 'Sepolia',
+        timestamp: tx['timestamp']?.toString(),
+      );
+    }
+  }
+
 }

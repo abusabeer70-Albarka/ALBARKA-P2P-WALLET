@@ -35,8 +35,18 @@ class TransactionHistoryService {
     required String address,
     required String status,
     String network = 'Sepolia',
+    String? timestamp,
   }) async {
     final transactions = await getTransactions();
+
+    // Prevent the same blockchain transaction from being saved twice.
+    final alreadyExists = transactions.any(
+      (tx) => tx['txHash']?.toString() == txHash,
+    );
+
+    if (alreadyExists) {
+      return;
+    }
 
     transactions.insert(0, {
       'txHash': txHash,
@@ -45,7 +55,7 @@ class TransactionHistoryService {
       'address': address,
       'status': status,
       'network': network,
-      'timestamp': DateTime.now().toIso8601String(),
+      'timestamp': timestamp ?? DateTime.now().toIso8601String(),
     });
 
     await _storage.write(
