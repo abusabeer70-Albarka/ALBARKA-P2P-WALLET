@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
@@ -16,6 +17,27 @@ class WalletService {
 
   Future<int> getSepoliaBlockNumber() async {
     return await _client.getBlockNumber();
+  }
+
+  Future<double> getEthUsdPrice() async {
+    final response = await http.get(
+      Uri.parse(
+        'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd',
+      ),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Unable to fetch ETH price.');
+    }
+
+    final data = jsonDecode(response.body);
+    final price = data['ethereum']?['usd'];
+
+    if (price == null) {
+      throw Exception('ETH/USD price not found.');
+    }
+
+    return (price as num).toDouble();
   }
 
   Future<double?> getSepoliaBalance() async {
