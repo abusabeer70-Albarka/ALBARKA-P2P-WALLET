@@ -39,16 +39,11 @@ class TransactionHistoryService {
   }) async {
     final transactions = await getTransactions();
 
-    // Prevent the same blockchain transaction from being saved twice.
-    final alreadyExists = transactions.any(
+    final existingIndex = transactions.indexWhere(
       (tx) => tx['txHash']?.toString() == txHash,
     );
 
-    if (alreadyExists) {
-      return;
-    }
-
-    transactions.insert(0, {
+    final transaction = {
       'txHash': txHash,
       'type': type,
       'amount': amount,
@@ -56,7 +51,13 @@ class TransactionHistoryService {
       'status': status,
       'network': network,
       'timestamp': timestamp ?? DateTime.now().toIso8601String(),
-    });
+    };
+
+    if (existingIndex >= 0) {
+      transactions[existingIndex] = transaction;
+    } else {
+      transactions.insert(0, transaction);
+    }
 
     await _storage.write(
       key: _storageKey,
