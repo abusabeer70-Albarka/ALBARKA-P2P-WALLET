@@ -1,3 +1,4 @@
+import 'services/transaction_history_service.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'services/wallet_service.dart';
@@ -660,12 +661,17 @@ class EthereumAssetScreen extends StatefulWidget {
 
 class _EthereumAssetScreenState extends State<EthereumAssetScreen> {
   final WalletService _walletService = WalletService();
+  final TransactionHistoryService _historyService =
+      TransactionHistoryService();
+
   String _balance = 'Loading...';
+  List<Map<String, dynamic>> _transactions = [];
 
   @override
   void initState() {
     super.initState();
     _loadBalance();
+    _loadTransactions();
   }
 
   Future<void> _loadBalance() async {
@@ -683,6 +689,16 @@ class _EthereumAssetScreenState extends State<EthereumAssetScreen> {
       if (!mounted) return;
       setState(() => _balance = 'Unable to load');
     }
+  }
+
+  Future<void> _loadTransactions() async {
+    final transactions = await _historyService.getTransactions();
+
+    if (!mounted) return;
+
+    setState(() {
+      _transactions = transactions;
+    });
   }
 
   @override
@@ -784,14 +800,38 @@ class _EthereumAssetScreenState extends State<EthereumAssetScreen> {
             ),
           ),
           const SizedBox(height: 10),
-          const Card(
-            color: Color(0xFF081D49),
-            child: ListTile(
-              leading: Icon(Icons.receipt_long),
-              title: Text('No transactions yet'),
-              subtitle: Text('Your Ethereum transactions will appear here.'),
+          if (_transactions.isEmpty)
+            const Card(
+              color: Color(0xFF081D49),
+              child: ListTile(
+                leading: Icon(Icons.receipt_long),
+                title: Text('No transactions yet'),
+                subtitle: Text(
+                  'Your Ethereum transactions will appear here.',
+                ),
+              ),
+            )
+          else
+            ..._transactions.map(
+              (tx) => Card(
+                color: const Color(0xFF081D49),
+                child: ListTile(
+                  leading: const Icon(
+                    Icons.arrow_upward,
+                    color: Colors.redAccent,
+                  ),
+                  title: Text(
+                    '${tx['type']} • ${tx['amount']} ETH',
+                  ),
+                  subtitle: Text(
+                    'To: ${tx['address']}\n'
+                    'Status: ${tx['status']} • ${tx['network']}',
+                  ),
+                  isThreeLine: true,
+                  trailing: const Icon(Icons.check_circle),
+                ),
+              ),
             ),
-          ),
         ],
       ),
     );

@@ -3,10 +3,11 @@ import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:web3dart/web3dart.dart';
-
+import 'transaction_history_service.dart';
 class WalletService {
   final _storage = const FlutterSecureStorage();
-
+  final TransactionHistoryService _historyService =
+      TransactionHistoryService();
   static const String _sepoliaRpc =
     String.fromEnvironment(
   'ALCHEMY_SEPOLIA_RPC',
@@ -189,13 +190,19 @@ class WalletService {
       value: EtherAmount.inWei(amountWei),
     );
 
-    final txHash = await _client.sendTransaction(
-      credentials,
-      transaction,
-      chainId: 11155111,
-    );
+   final txHash = await _client.sendTransaction(
+  credentials,
+  transaction,
+  chainId: 11155111,
+);
 
-    return txHash;
-  }
+await _historyService.addTransaction(
+  txHash: txHash,
+  type: 'Send',
+  amount: amountEth,
+  address: recipientAddress,
+  status: 'Success',
+  network: 'Sepolia',
+);
 
-}
+return txHash;
