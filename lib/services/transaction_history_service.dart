@@ -35,6 +35,7 @@ class TransactionHistoryService {
     required String address,
     required String status,
     String network = 'Sepolia',
+    String asset = 'ETH',
     String? timestamp,
   }) async {
     final transactions = await getTransactions();
@@ -50,6 +51,7 @@ class TransactionHistoryService {
       'address': address,
       'status': status,
       'network': network,
+      'asset': asset,
       'timestamp': timestamp ?? DateTime.now().toIso8601String(),
     };
 

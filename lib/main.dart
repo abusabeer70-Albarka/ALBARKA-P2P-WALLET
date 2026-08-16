@@ -1068,7 +1068,11 @@ class _EthereumAssetScreenState extends State<EthereumAssetScreen> {
               ),
             )
           else
-            ..._transactions.map(
+            ..._transactions
+                .where(
+                  (tx) => (tx['asset']?.toString() ?? 'ETH') == 'ETH',
+                )
+                .map(
               (tx) => Card(
                 color: const Color(0xFF081D49),
                 child: ListTile(
@@ -1124,13 +1128,42 @@ class UsdtAssetScreen extends StatefulWidget {
 
 class _UsdtAssetScreenState extends State<UsdtAssetScreen> {
   final WalletService _walletService = WalletService();
+  final TransactionHistoryService _historyService =
+      TransactionHistoryService();
 
   String _balance = 'Loading...';
+  List<Map<String, dynamic>> _transactions = [];
 
   @override
   void initState() {
     super.initState();
     _loadBalance();
+    _syncBlockchainTransactions();
+    _loadTransactions();
+  }
+
+  Future<void> _loadTransactions() async {
+    final transactions = await _historyService.getTransactions();
+
+    if (!mounted) return;
+
+    setState(() {
+      _transactions = transactions
+          .where(
+            (tx) => tx['asset']?.toString() == 'USDT',
+          )
+          .toList();
+    });
+  }
+
+  Future<void> _syncBlockchainTransactions() async {
+    try {
+      await _walletService.syncBlockchainTransactions();
+    } catch (_) {
+      // Keep local history if blockchain sync fails.
+    }
+
+    await _loadTransactions();
   }
 
   Future<void> _loadBalance() async {
@@ -1295,6 +1328,66 @@ class _UsdtAssetScreenState extends State<UsdtAssetScreen> {
               ),
             ],
           ),
+
+          const SizedBox(height: 24),
+
+          const Text(
+            'Transactions',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 10),
+
+          if (_transactions.isEmpty)
+            const Card(
+              color: Color(0xFF081D49),
+              child: ListTile(
+                leading: Icon(Icons.receipt_long),
+                title: Text('No USDT transactions yet'),
+                subtitle: Text(
+                  'Your USDT transactions will appear here.',
+                ),
+              ),
+            )
+          else
+            ..._transactions.map(
+              (tx) => Card(
+                color: const Color(0xFF081D49),
+                child: ListTile(
+                  leading: Icon(
+                    tx['type']?.toString() == 'Receive'
+                        ? Icons.arrow_downward
+                        : Icons.arrow_upward,
+                    color: tx['type']?.toString() == 'Receive'
+                        ? Colors.greenAccent
+                        : Colors.redAccent,
+                  ),
+                  title: Text(
+                    '${tx['type']} • ${tx['amount']} USDT',
+                  ),
+                  subtitle: Text(
+                    '${tx['type']?.toString() == 'Receive' ? 'From' : 'To'}: ${tx['address']}\\n'
+                    'Status: ${tx['status']} • ${tx['network']}\\n'
+                    'Date: ${tx['timestamp'] ?? 'Unknown date'}',
+                  ),
+                  isThreeLine: true,
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => TransactionDetailsScreen(
+                          transaction: tx,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
 
           const SizedBox(height: 24),
 
@@ -1951,6 +2044,7 @@ class TransactionDetailsScreen extends StatelessWidget {
     final type = transaction['type']?.toString() ?? 'Send';
     final status = transaction['status']?.toString() ?? 'Unknown';
     final network = transaction['network']?.toString() ?? 'Sepolia';
+    final asset = transaction['asset']?.toString() ?? 'ETH';
     final addressLabel = type == 'Receive' ? 'From' : 'To';
 
     return Scaffold(
@@ -1976,7 +2070,7 @@ class TransactionDetailsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 28),
-          _detailRow('Amount', '$amount ETH'),
+          _detailRow('Amount', '$amount $asset'),
           _detailRow(addressLabel, address),
           _detailRow('Status', status),
           _detailRow('Network', network),

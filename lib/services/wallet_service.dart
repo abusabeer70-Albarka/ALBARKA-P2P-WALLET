@@ -268,6 +268,7 @@ await _historyService.addTransaction(
   address: recipientAddress,
   status: 'Success',
   network: 'Sepolia',
+  asset: 'ETH',
 );
 
 return txHash;
@@ -526,6 +527,7 @@ return txHash;
       address: recipientAddress,
       status: 'Success',
       network: 'Sepolia',
+      asset: 'USDT',
     );
 
     return txHash;
