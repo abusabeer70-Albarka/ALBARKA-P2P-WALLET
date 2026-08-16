@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:web3dart/web3dart.dart';
 import 'services/wallet_service.dart';
 import 'services/app_lock_lifecycle.dart';
 import 'services/app_lock_service.dart';
