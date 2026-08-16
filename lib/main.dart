@@ -794,7 +794,16 @@ class _HomeScreenState extends State<HomeScreen> {
                             builder: (_) => EthereumAssetScreen(address: _address!),
                           ),
                         )
-                    : null,
+                    : a.$2 == 'USDT' && _address != null
+                        ? () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => UsdtAssetScreen(
+                                  address: _address!,
+                                ),
+                              ),
+                            )
+                        : null,
               ),
             ),
           ),
@@ -1093,6 +1102,201 @@ class _EthereumAssetScreenState extends State<EthereumAssetScreen> {
                 ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+
+class UsdtAssetScreen extends StatefulWidget {
+  final String address;
+
+  const UsdtAssetScreen({
+    super.key,
+    required this.address,
+  });
+
+  @override
+  State<UsdtAssetScreen> createState() => _UsdtAssetScreenState();
+}
+
+class _UsdtAssetScreenState extends State<UsdtAssetScreen> {
+  final WalletService _walletService = WalletService();
+
+  String _balance = 'Loading...';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBalance();
+  }
+
+  Future<void> _loadBalance() async {
+    try {
+      final balance = await _walletService.getSepoliaUsdtBalance();
+
+      if (!mounted) return;
+
+      setState(() {
+        _balance = balance == null
+            ? 'No wallet'
+            : '${balance.toStringAsFixed(6)} USDT';
+      });
+    } catch (_) {
+      if (!mounted) return;
+
+      setState(() {
+        _balance = 'Unable to load';
+      });
+    }
+  }
+
+  Future<void> _copyAddress() async {
+    await Clipboard.setData(
+      ClipboardData(text: widget.address),
+    );
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('USDT wallet address copied'),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('USDT'),
+        actions: [
+          IconButton(
+            tooltip: 'Refresh',
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadBalance,
+          ),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(18),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [
+                  Color(0xFF0B3E9B),
+                  Color(0xFF06245C),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(22),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'USDT Balance',
+                  style: TextStyle(
+                    color: Colors.white70,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _balance,
+                  style: const TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Sepolia Test Network',
+                  style: TextStyle(
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          const Text(
+            'Wallet Address',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFF081D49),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: SelectableText(widget.address),
+                ),
+                IconButton(
+                  tooltip: 'Copy address',
+                  icon: const Icon(Icons.copy),
+                  onPressed: _copyAddress,
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: null,
+                  icon: const Icon(Icons.arrow_upward),
+                  label: const Text('Send USDT'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ReceiveScreen(
+                          address: widget.address,
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.qr_code_2),
+                  label: const Text('Receive'),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 24),
+
+          const Card(
+            color: Color(0xFF081D49),
+            child: ListTile(
+              leading: Icon(Icons.info_outline),
+              title: Text('Sepolia Test USDT'),
+              subtitle: Text(
+                'This is test USDT for development. '
+                'It is not real Tether USDT.',
+              ),
+            ),
+          ),
         ],
       ),
     );
