@@ -422,6 +422,114 @@ return txHash;
 
     return unique.values.toList();
   }
+  Future<String> sendSepoliaUsdt({
+    required String recipientAddress,
+    required String amountUsdt,
+  }) async {
+    final privateKey = await getPrivateKey();
+
+    if (privateKey == null || privateKey.isEmpty) {
+      throw Exception('Wallet private key not found.');
+    }
+
+    final credentials = EthPrivateKey.fromHex(privateKey);
+    final recipient = EthereumAddress.fromHex(recipientAddress);
+
+    final parts = amountUsdt.trim().split('.');
+    final wholePart =
+        parts.isEmpty || parts[0].isEmpty ? '0' : parts[0];
+    final fractionPart = parts.length > 1 ? parts[1] : '';
+
+    if (parts.length > 2 ||
+        !RegExp(r'^\d+$').hasMatch(wholePart) ||
+        (fractionPart.isNotEmpty &&
+            !RegExp(r'^\d+$').hasMatch(fractionPart))) {
+      throw FormatException('Invalid USDT amount: $amountUsdt');
+    }
+
+    if (fractionPart.length > _usdtDecimals) {
+      throw FormatException(
+        'USDT amount has more than $_usdtDecimals decimal places.',
+      );
+    }
+
+    final paddedFraction =
+        fractionPart.padRight(_usdtDecimals, '0');
+
+    final amountRaw =
+        BigInt.parse(wholePart) *
+            BigInt.from(10).pow(_usdtDecimals) +
+        BigInt.parse(
+          paddedFraction.isEmpty ? '0' : paddedFraction,
+        );
+
+    if (amountRaw <= BigInt.zero) {
+      throw FormatException(
+        'USDT amount must be greater than zero.',
+      );
+    }
+
+    final contractAddress =
+        EthereumAddress.fromHex(_sepoliaUsdtContract);
+
+    final contract = DeployedContract(
+      ContractAbi.fromJson(
+        jsonEncode([
+          {
+            'constant': false,
+            'inputs': [
+              {
+                'name': 'to',
+                'type': 'address',
+              },
+              {
+                'name': 'value',
+                'type': 'uint256',
+              },
+            ],
+            'name': 'transfer',
+            'outputs': [
+              {
+                'name': '',
+                'type': 'bool',
+              },
+            ],
+            'type': 'function',
+          },
+        ]),
+        'TetherMock',
+      ),
+      contractAddress,
+    );
+
+    final transferFunction = contract.function('transfer');
+
+    final transaction = Transaction.callContract(
+      contract: contract,
+      function: transferFunction,
+      parameters: [
+        recipient,
+        amountRaw,
+      ],
+    );
+
+    final txHash = await _client.sendTransaction(
+      credentials,
+      transaction,
+      chainId: 11155111,
+    );
+
+    await _historyService.addTransaction(
+      txHash: txHash,
+      type: 'Send',
+      amount: amountUsdt,
+      address: recipientAddress,
+      status: 'Success',
+      network: 'Sepolia',
+    );
+
+    return txHash;
+  }
 
   Future<void> syncBlockchainTransactions() async {
     final blockchainTransactions = await getBlockchainTransactions();

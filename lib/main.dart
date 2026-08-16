@@ -1152,6 +1152,17 @@ class _UsdtAssetScreenState extends State<UsdtAssetScreen> {
     }
   }
 
+  void _openSendUsdt() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SendUsdtScreen(
+          address: widget.address,
+        ),
+      ),
+    );
+  }
+
   Future<void> _copyAddress() async {
     await Clipboard.setData(
       ClipboardData(text: widget.address),
@@ -1259,7 +1270,7 @@ class _UsdtAssetScreenState extends State<UsdtAssetScreen> {
             children: [
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: null,
+                  onPressed: _openSendUsdt,
                   icon: const Icon(Icons.arrow_upward),
                   label: const Text('Send USDT'),
                 ),
@@ -1294,6 +1305,190 @@ class _UsdtAssetScreenState extends State<UsdtAssetScreen> {
               subtitle: Text(
                 'This is test USDT for development. '
                 'It is not real Tether USDT.',
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
+class SendUsdtScreen extends StatefulWidget {
+  final String address;
+
+  const SendUsdtScreen({
+    super.key,
+    required this.address,
+  });
+
+  @override
+  State<SendUsdtScreen> createState() => _SendUsdtScreenState();
+}
+
+class _SendUsdtScreenState extends State<SendUsdtScreen> {
+  final WalletService _walletService = WalletService();
+
+  final TextEditingController _recipientController =
+      TextEditingController();
+
+  final TextEditingController _amountController =
+      TextEditingController();
+
+  bool _sending = false;
+
+  @override
+  void dispose() {
+    _recipientController.dispose();
+    _amountController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _sendUsdt() async {
+    if (_sending) return;
+
+    final recipient = _recipientController.text.trim();
+    final amount = _amountController.text.trim();
+
+    if (recipient.isEmpty || amount.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Enter recipient address and amount.'),
+        ),
+      );
+      return;
+    }
+
+    try {
+      EthereumAddress.fromHex(recipient);
+
+      setState(() {
+        _sending = true;
+      });
+
+      final txHash = await _walletService.sendSepoliaUsdt(
+        recipientAddress: recipient,
+        amountUsdt: amount,
+      );
+
+      if (!mounted) return;
+
+      await showDialog<void>(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('Transaction Successful'),
+          content: SelectableText(
+            'USDT sent successfully.\n\nTransaction Hash:\n$txHash',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Send failed: $e'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _sending = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Send USDT'),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(18),
+        children: [
+          const Card(
+            child: ListTile(
+              leading: Icon(Icons.currency_exchange),
+              title: Text('Sepolia Test USDT'),
+              subtitle: Text(
+                'This is test USDT for development only.',
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          const Text(
+            'Recipient Address',
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          TextField(
+            controller: _recipientController,
+            keyboardType: TextInputType.text,
+            decoration: const InputDecoration(
+              hintText: '0x...',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.account_balance_wallet),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          const Text(
+            'Amount USDT',
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          TextField(
+            controller: _amountController,
+            keyboardType: const TextInputType.numberWithOptions(
+              decimal: true,
+            ),
+            decoration: const InputDecoration(
+              hintText: '0.0',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.attach_money),
+            ),
+          ),
+
+          const SizedBox(height: 28),
+
+          SizedBox(
+            height: 52,
+            child: ElevatedButton.icon(
+              onPressed: _sending ? null : _sendUsdt,
+              icon: _sending
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Icon(Icons.send),
+              label: Text(
+                _sending ? 'Sending...' : 'Send USDT',
               ),
             ),
           ),
