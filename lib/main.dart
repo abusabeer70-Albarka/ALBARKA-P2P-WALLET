@@ -223,6 +223,7 @@ class _BackupScreenState extends State<BackupScreen> {
   String? _recoveryPhrase;
   bool _loading = true;
   bool _confirmed = false;
+  bool _phraseVisible = false;  
 
   @override
   void initState() {
@@ -277,16 +278,57 @@ class _BackupScreenState extends State<BackupScreen> {
                         borderRadius: BorderRadius.circular(18),
                         border: Border.all(color: const Color(0xFF1479FF)),
                       ),
-                      child: SelectableText(
-                        _recoveryPhrase ?? 'Recovery phrase unavailable.',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          height: 1.7,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-            ),
+                     child: Column(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    Expanded(
+      child: Center(
+        child: _phraseVisible
+            ? SelectableText(
+                _recoveryPhrase ?? 'Recovery phrase unavailable.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 18,
+                  height: 1.7,
+                  fontWeight: FontWeight.w600,
+                ),
+              )
+            : const Text(
+                '•••• •••• •••• ••••\n'
+                '•••• •••• •••• ••••',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 24,
+                  letterSpacing: 2,
+                ),
+              ),
+      ),
+    ),
+    const SizedBox(height: 16),
+    SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: _recoveryPhrase == null
+            ? null
+            : () {
+                setState(() {
+                  _phraseVisible = !_phraseVisible;
+                });
+              },
+        icon: Icon(
+          _phraseVisible
+              ? Icons.visibility_off
+              : Icons.visibility,
+        ),
+        label: Text(
+          _phraseVisible
+              ? 'Hide Recovery Phrase'
+              : 'Show Recovery Phrase',
+        ),
+      ),
+    ),
+  ],
+),
             const SizedBox(height: 16),
             CheckboxListTile(
               value: _confirmed,
