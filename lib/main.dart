@@ -212,7 +212,7 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
 }
 
 class BackupScreen extends StatefulWidget {
-  BackupScreen({super.key});
+  const BackupScreen({super.key});
 
   @override
   State<BackupScreen> createState() => _BackupScreenState();
@@ -220,30 +220,40 @@ class BackupScreen extends StatefulWidget {
 
 class _BackupScreenState extends State<BackupScreen> {
   final WalletService _walletService = WalletService();
+
   String? _recoveryPhrase;
   bool _loading = true;
   bool _confirmed = false;
-  bool _phraseVisible = false;  
+  bool _phraseVisible = false;
 
   @override
   void initState() {
     super.initState();
-    _createWallet();
+    _loadRecoveryPhrase();
   }
 
-  Future<void> _createWallet() async {
+  Future<void> _loadRecoveryPhrase() async {
     try {
       final phrase = await _walletService.getRecoveryPhrase();
+
       if (!mounted) return;
+
       setState(() {
         _recoveryPhrase = phrase;
         _loading = false;
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => _loading = false);
+
+      setState(() {
+        _loading = false;
+      });
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Wallet creation failed: ')),
+        SnackBar(
+          content: Text('Recovery phrase unavailable: $e'),
+          duration: const Duration(seconds: 8),
+        ),
       );
     }
   }
@@ -251,7 +261,9 @@ class _BackupScreenState extends State<BackupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Secure Backup')),
+      appBar: AppBar(
+        title: const Text('Secure Backup'),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -259,82 +271,101 @@ class _BackupScreenState extends State<BackupScreen> {
           children: [
             const Text(
               'Recovery Phrase',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 12),
             const Text(
-              'Write down these 12 words and keep them somewhere safe. Anyone who has them can access your wallet.',
-              style: TextStyle(color: Colors.white70, height: 1.5),
+              'Write down these 12 words and keep them somewhere safe. '
+              'Anyone who has them can access your wallet.',
+              style: TextStyle(
+                color: Colors.white70,
+                height: 1.5,
+              ),
             ),
             const SizedBox(height: 24),
             Expanded(
               child: _loading
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const Center(
+                      child: CircularProgressIndicator(),
+                    )
                   : Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: const Color(0xFF0B255D),
                         borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: const Color(0xFF1479FF)),
+                        border: Border.all(
+                          color: const Color(0xFF1479FF),
+                        ),
                       ),
-                     child: Column(
-  crossAxisAlignment: CrossAxisAlignment.start,
-  children: [
-    Expanded(
-      child: Center(
-        child: _phraseVisible
-            ? SelectableText(
-                _recoveryPhrase ?? 'Recovery phrase unavailable.',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 18,
-                  height: 1.7,
-                  fontWeight: FontWeight.w600,
-                ),
-              )
-            : const Text(
-                '•••• •••• •••• ••••\n'
-                '•••• •••• •••• ••••',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 24,
-                  letterSpacing: 2,
-                ),
-              ),
-      ),
-    ),
-    const SizedBox(height: 16),
-    SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: _recoveryPhrase == null
-            ? null
-            : () {
-                setState(() {
-                  _phraseVisible = !_phraseVisible;
-                });
-              },
-        icon: Icon(
-          _phraseVisible
-              ? Icons.visibility_off
-              : Icons.visibility,
-        ),
-        label: Text(
-          _phraseVisible
-              ? 'Hide Recovery Phrase'
-              : 'Show Recovery Phrase',
-        ),
-      ),
-    ),
-  ],
-),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Center(
+                              child: _phraseVisible
+                                  ? SelectableText(
+                                      _recoveryPhrase ??
+                                          'Recovery phrase unavailable.',
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        height: 1.7,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    )
+                                  : const Text(
+                                      '•••• •••• •••• ••••\n'
+                                      '•••• •••• •••• ••••',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 24,
+                                        letterSpacing: 2,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: _recoveryPhrase == null
+                                  ? null
+                                  : () {
+                                      setState(() {
+                                        _phraseVisible =
+                                            !_phraseVisible;
+                                      });
+                                    },
+                              icon: Icon(
+                                _phraseVisible
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                              ),
+                              label: Text(
+                                _phraseVisible
+                                    ? 'Hide Recovery Phrase'
+                                    : 'Show Recovery Phrase',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+            ),
             const SizedBox(height: 16),
             CheckboxListTile(
               value: _confirmed,
               onChanged: _recoveryPhrase == null
                   ? null
-                  : (value) => setState(() => _confirmed = value ?? false),
+                  : (value) {
+                      setState(() {
+                        _confirmed = value ?? false;
+                      });
+                    },
               title: const Text(
                 'I have safely written down my recovery phrase.',
               ),
@@ -345,12 +376,14 @@ class _BackupScreenState extends State<BackupScreen> {
               text: 'Continue to Wallet',
               filled: _confirmed,
               onTap: _confirmed
-                  ? () => Navigator.pushReplacement(
+                  ? () {
+                      Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
                           builder: (_) => const HomeScreen(),
                         ),
-                      )
+                      );
+                    }
                   : () {},
             ),
           ],
