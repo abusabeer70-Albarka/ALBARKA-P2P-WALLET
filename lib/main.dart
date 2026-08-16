@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'services/wallet_service.dart';
+import 'screens/set_pin_screen.dart';
 
 void main() {
   runApp(const AlbarkaApp());
@@ -584,16 +585,23 @@ class _HomeScreenState extends State<HomeScreen> {
               _selectedIndex = index;
             });
 
-            if (index != 0) {
+            if (index == 3) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const SetPinScreen(),
+                ),
+              );
+            } else if (index == 1) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    index == 1
-                        ? 'Markets coming soon'
-                        : index == 2
-                            ? 'DApps coming soon'
-                            : 'Settings coming soon',
-                  ),
+                const SnackBar(
+                  content: Text('Markets coming soon'),
+                ),
+              );
+            } else if (index == 2) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('DApps coming soon'),
                 ),
               );
             }
