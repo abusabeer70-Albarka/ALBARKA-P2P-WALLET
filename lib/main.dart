@@ -510,6 +510,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final WalletService _walletService = WalletService();
   String? _address;
   String _ethBalance = '0.000000';
+  String _usdtBalance = '0.000000';
   double _ethUsdPrice = 0.0;
   int _selectedIndex = 0;
   late final AppLockLifecycle _appLockLifecycle;
@@ -536,6 +537,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     _loadAddress();
     _loadEthBalance();
+    _loadUsdtBalance();
   }
 
   @override
@@ -569,6 +571,25 @@ class _HomeScreenState extends State<HomeScreen> {
     final address = await _walletService.getAddress();
     if (!mounted) return;
     setState(() => _address = address);
+  }
+
+  Future<void> _loadUsdtBalance() async {
+    try {
+      final balance = await _walletService.getSepoliaUsdtBalance();
+
+      if (!mounted) return;
+
+      setState(() {
+        _usdtBalance = balance == null
+            ? '0.000000'
+            : balance.toStringAsFixed(6);
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _usdtBalance = '0.000000';
+      });
+    }
   }
 
   Future<void> _loadEthBalance() async {
@@ -620,7 +641,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ('Bitcoin', 'BTC', '0.000000', Icons.currency_bitcoin),
       ('Ethereum', 'ETH', _ethBalance, Icons.diamond_outlined),
       ('BNB', 'BNB', '0.000000', Icons.token),
-      ('USDT', 'USDT', '0.00', Icons.attach_money),
+      ('USDT', 'USDT', _usdtBalance, Icons.attach_money),
     ];
 
     return Scaffold(

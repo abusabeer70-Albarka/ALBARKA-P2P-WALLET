@@ -16,6 +16,12 @@ class WalletService {
 
   static const String _alchemyApiKey =
       String.fromEnvironment('ALCHEMY_API_KEY');
+
+  // Sepolia test USDT (NOT real Tether USDT).
+  static const String _sepoliaUsdtContract =
+      '0x79af4e49901b107ece18b9fa79d99ff502e11c97';
+
+  static const int _usdtDecimals = 6;
   final Web3Client _client =
       Web3Client(_sepoliaRpc, http.Client());
 
@@ -56,6 +62,62 @@ class WalletService {
     final balance = await _client.getBalance(address);
 
     return balance.getInWei.toDouble() / 1000000000000000000;
+  }
+
+  Future<double?> getSepoliaUsdtBalance() async {
+    final walletAddress = await getAddress();
+
+    if (walletAddress == null || walletAddress.isEmpty) {
+      return null;
+    }
+
+    final contractAddress =
+        EthereumAddress.fromHex(_sepoliaUsdtContract);
+
+    final contract = DeployedContract(
+      ContractAbi.fromJson(
+        jsonEncode([
+          {
+            'constant': true,
+            'inputs': [
+              {
+                'name': 'account',
+                'type': 'address',
+              },
+            ],
+            'name': 'balanceOf',
+            'outputs': [
+              {
+                'name': '',
+                'type': 'uint256',
+              },
+            ],
+            'type': 'function',
+          },
+        ]),
+        'TetherMock',
+      ),
+      contractAddress,
+    );
+
+    final balanceFunction = contract.function('balanceOf');
+
+    final result = await _client.call(
+      contract: contract,
+      function: balanceFunction,
+      params: [
+        EthereumAddress.fromHex(walletAddress),
+      ],
+    );
+
+    if (result.isEmpty) {
+      return 0.0;
+    }
+
+    final rawBalance = result.first as BigInt;
+
+    return rawBalance.toDouble() /
+        BigInt.from(10).pow(_usdtDecimals).toDouble();
   }
 
   Future<String> createWallet() async {
