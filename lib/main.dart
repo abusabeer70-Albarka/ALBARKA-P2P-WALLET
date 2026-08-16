@@ -4,7 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'services/wallet_service.dart';
+import 'services/app_lock_lifecycle.dart';
+import 'services/app_lock_service.dart';
 import 'screens/set_pin_screen.dart';
+import 'screens/pin_lock_screen.dart';
 
 void main() {
   runApp(const AlbarkaApp());
@@ -505,12 +508,57 @@ class _HomeScreenState extends State<HomeScreen> {
   String _ethBalance = '0.000000';
   double _ethUsdPrice = 0.0;
   int _selectedIndex = 0;
+  late final AppLockLifecycle _appLockLifecycle;
+  bool _isInBackground = false;
+  bool _isLockScreenOpen = false;
 
   @override
   void initState() {
     super.initState();
+
+    _appLockLifecycle = AppLockLifecycle(
+      onBackground: () {
+        _isInBackground = true;
+      },
+      onForeground: () {
+        if (_isInBackground) {
+          _isInBackground = false;
+          _openLockScreen();
+        }
+      },
+    );
+
+    _appLockLifecycle.start();
+
     _loadAddress();
     _loadEthBalance();
+  }
+
+  @override
+  void dispose() {
+    _appLockLifecycle.stop();
+    super.dispose();
+  }
+
+  Future<void> _openLockScreen() async {
+    if (_isLockScreenOpen || !mounted) return;
+
+    final hasPin = await AppLockService().hasPin();
+
+    if (!hasPin || !mounted) return;
+
+    _isLockScreenOpen = true;
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const PinLockScreen(),
+      ),
+    );
+
+    if (mounted) {
+      _isLockScreenOpen = false;
+    }
   }
 
   Future<void> _loadAddress() async {
