@@ -6,6 +6,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'services/wallet_service.dart';
 import 'services/app_lock_lifecycle.dart';
 import 'services/app_lock_service.dart';
+import 'screens/app_startup_screen.dart';
 import 'screens/set_pin_screen.dart';
 import 'screens/pin_lock_screen.dart';
 
@@ -30,7 +31,10 @@ class AlbarkaApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const WelcomeScreen(),
+      home: const AppStartupScreen(
+        welcomeScreen: WelcomeScreen(),
+        homeScreen: HomeScreen(),
+      ),
     );
   }
 }
