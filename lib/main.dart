@@ -884,11 +884,30 @@ class _EthereumAssetScreenState extends State<EthereumAssetScreen> {
     });
   }
 
+  Future<void> _refreshData() async {
+    await _loadBalance();
+
+    try {
+      await _walletService.syncBlockchainTransactions();
+    } catch (_) {
+      // Keep the current transaction history if blockchain sync fails.
+    }
+
+    await _loadTransactions();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Ethereum'),
+        actions: [
+          IconButton(
+            tooltip: 'Refresh',
+            icon: const Icon(Icons.refresh),
+            onPressed: _refreshData,
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(18),
@@ -939,7 +958,30 @@ class _EthereumAssetScreenState extends State<EthereumAssetScreen> {
               color: const Color(0xFF081D49),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: SelectableText(widget.address),
+            child: Row(
+              children: [
+                Expanded(
+                  child: SelectableText(widget.address),
+                ),
+                IconButton(
+                  tooltip: 'Copy address',
+                  icon: const Icon(Icons.copy),
+                  onPressed: () async {
+                    await Clipboard.setData(
+                      ClipboardData(text: widget.address),
+                    );
+
+                    if (!context.mounted) return;
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Wallet address copied'),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 24),
           Row(
