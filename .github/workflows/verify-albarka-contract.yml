@@ -1,0 +1,25 @@
+name: Verify AlbarkaSwapTestnet Contract
+
+on:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install ethers
+        run: npm install ethers@6.17.0
+
+      - name: Verify deployed contract
+        env:
+          ALCHEMY_SEPOLIA_RPC: ${{ secrets.ALCHEMY_SEPOLIA_RPC }}
+        run: node verify-contract.js
