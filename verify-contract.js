@@ -1,7 +1,7 @@
 const { ethers } = require("ethers");
 
 const RPC = process.env.ALCHEMY_SEPOLIA_RPC;
-const CONTRACT = "0x698C67e888DDfEbCcAE584e043e8e91AbDA30500";
+const CONTRACT = "0x55a044246e10A103921CB033effAfA5eecF90524";
 const EXPECTED_USDT = "0x79af4e49901b107ece18b9fa79d99ff502e11c97";
 
 const ABI = [
@@ -9,8 +9,6 @@ const ABI = [
   "function owner() view returns (address)",
   "function USDT_PER_ETH() view returns (uint256)",
   "function USDT_DECIMALS() view returns (uint256)",
-  "function getContractEthBalance() view returns (uint256)",
-  "function getContractUsdtBalance() view returns (uint256)"
 ];
 
 async function main() {
@@ -42,16 +40,12 @@ async function main() {
   const owner = await contract.owner();
   const rate = await contract.USDT_PER_ETH();
   const decimals = await contract.USDT_DECIMALS();
-  const ethBalance = await contract.getContractEthBalance();
-  const usdtBalance = await contract.getContractUsdtBalance();
 
   console.log("CONTRACT=" + CONTRACT);
   console.log("USDT=" + usdt);
   console.log("OWNER=" + owner);
   console.log("USDT_PER_ETH=" + rate);
   console.log("USDT_DECIMALS=" + decimals);
-  console.log("ETH_BALANCE=" + ethers.formatEther(ethBalance));
-  console.log("USDT_BALANCE=" + ethers.formatUnits(usdtBalance, decimals));
 
   if (usdt.toLowerCase() !== EXPECTED_USDT.toLowerCase()) {
     throw new Error("USDT contract address mismatch.");
