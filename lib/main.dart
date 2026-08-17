@@ -230,6 +230,7 @@ class BackupScreen extends StatefulWidget {
 
 class _BackupScreenState extends State<BackupScreen> {
   final WalletService _walletService = WalletService();
+  final AppLockService _appLockService = AppLockService();
 
   String? _recoveryPhrase;
   bool _loading = true;
@@ -240,6 +241,94 @@ class _BackupScreenState extends State<BackupScreen> {
   void initState() {
     super.initState();
     _loadRecoveryPhrase();
+  }
+  Future<void> _toggleRecoveryPhrase() async {
+    if (_phraseVisible) {
+      setState(() {
+        _phraseVisible = false;
+      });
+      return;
+    }
+
+    final hasPin = await _appLockService.hasPin();
+
+    if (!mounted) return;
+
+    if (!hasPin) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please create an App PIN first.'),
+        ),
+      );
+      return;
+    }
+
+    final controller = TextEditingController();
+
+    final verified = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Enter App PIN'),
+          content: TextField(
+            controller: controller,
+            obscureText: true,
+            keyboardType: TextInputType.number,
+            maxLength: 6,
+            autofocus: true,
+            decoration: const InputDecoration(
+              labelText: '6-Digit PIN',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                final pin = controller.text.trim();
+
+                if (pin.length != 6 ||
+                    int.tryParse(pin) == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('PIN must be exactly 6 digits.'),
+                    ),
+                  );
+                  return;
+                }
+
+                final correct =
+                    await _appLockService.verifyPin(pin);
+
+                if (!dialogContext.mounted) return;
+
+                if (correct) {
+                  Navigator.pop(dialogContext, true);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Incorrect PIN.'),
+                    ),
+                  );
+                }
+              },
+              child: const Text('Unlock'),
+            ),
+          ],
+        );
+      },
+    );
+
+    controller.dispose();
+
+    if (!mounted || verified != true) return;
+
+    setState(() {
+      _phraseVisible = true;
+    });
   }
 
   Future<void> _loadRecoveryPhrase() async {
@@ -344,12 +433,7 @@ class _BackupScreenState extends State<BackupScreen> {
                             child: ElevatedButton.icon(
                               onPressed: _recoveryPhrase == null
                                   ? null
-                                  : () {
-                                      setState(() {
-                                        _phraseVisible =
-                                            !_phraseVisible;
-                                      });
-                                    },
+                                  : _toggleRecoveryPhrase,
                               icon: Icon(
                                 _phraseVisible
                                     ? Icons.visibility_off
