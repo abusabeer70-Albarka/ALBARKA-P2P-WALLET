@@ -1,0 +1,32 @@
+name: Deploy AlbarkaSwapTestnet
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install ethers
+        run: npm install ethers@6.17.0
+
+      - name: Verify contract artifacts
+        run: |
+          test -s contracts/build/AlbarkaSwapTestnet.abi
+          test -s contracts/build/AlbarkaSwapTestnet.bin
+          echo "Contract artifacts verified."
+
+      - name: Deploy AlbarkaSwapTestnet
+        env:
+          ALCHEMY_SEPOLIA_RPC: ${{ secrets.ALCHEMY_SEPOLIA_RPC }}
+          DEPLOYER_PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
+        run: node deploy-albarka.js
