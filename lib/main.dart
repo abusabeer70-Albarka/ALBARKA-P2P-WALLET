@@ -10,6 +10,7 @@ import 'services/app_lock_service.dart';
 import 'screens/app_startup_screen.dart';
 import 'screens/set_pin_screen.dart';
 import 'screens/pin_lock_screen.dart';
+import 'screens/wallet_management_screen.dart';
 
 void main() {
   runApp(const AlbarkaApp());
@@ -663,7 +664,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => const SetPinScreen(),
+                  builder: (_) => const WalletManagementScreen(),
                 ),
               );
             } else if (index == 1) {
