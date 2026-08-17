@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../main.dart' show BackupScreen;
 import '../services/wallet_service.dart';
 import 'set_pin_screen.dart';
 
@@ -142,6 +143,28 @@ class WalletManagementScreen extends StatelessWidget {
           ),
 
           const SizedBox(height: 24),
+
+        Card(
+          color: const Color(0xFF081D49),
+          child: ListTile(
+            leading: const Icon(Icons.security_outlined),
+            title: const Text('Secure Backup'),
+            subtitle: const Text(
+              'View your recovery phrase securely with your App PIN.',
+            ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const BackupScreen(),
+                ),
+              );
+            },
+          ),
+        ),
+
+        const SizedBox(height: 12),
 
           const Card(
             child: Padding(
