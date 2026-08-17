@@ -1413,6 +1413,8 @@ class _UsdtAssetScreenState extends State<UsdtAssetScreen> {
 
 
 
+
+
 class SwapScreen extends StatefulWidget {
   const SwapScreen({super.key});
 
@@ -1421,11 +1423,16 @@ class SwapScreen extends StatefulWidget {
 }
 
 class _SwapScreenState extends State<SwapScreen> {
-  final _amountController = TextEditingController();
+  final WalletService _walletService = WalletService();
+  final TextEditingController _amountController = TextEditingController();
 
   String _fromAsset = 'ETH';
   String _toAsset = 'USDT';
   double _slippage = 0.5;
+
+  bool _loading = false;
+  String? _quote;
+  String? _txHash;
 
   @override
   void dispose() {
@@ -1438,11 +1445,146 @@ class _SwapScreenState extends State<SwapScreen> {
       final oldFrom = _fromAsset;
       _fromAsset = _toAsset;
       _toAsset = oldFrom;
+      _quote = null;
+      _txHash = null;
     });
+  }
+
+  double? _amount() {
+    return double.tryParse(_amountController.text.trim());
+  }
+
+  void _updateQuote() {
+    final amount = _amount();
+
+    if (amount == null || amount <= 0) {
+      setState(() {
+        _quote = null;
+      });
+      return;
+    }
+
+    final received =
+        _fromAsset == 'ETH' ? amount * 1000 : amount / 1000;
+
+    setState(() {
+      _quote = received.toStringAsFixed(
+        _toAsset == 'USDT' ? 2 : 6,
+      );
+    });
+  }
+
+  Future<void> _reviewSwap() async {
+    final amount = _amount();
+
+    if (amount == null || amount <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Enter a valid amount.'),
+        ),
+      );
+      return;
+    }
+
+    _updateQuote();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        final receive =
+            _fromAsset == 'ETH' ? amount * 1000 : amount / 1000;
+
+        return AlertDialog(
+          title: const Text('Confirm Swap'),
+          content: Text(
+            'You pay: $amount $_fromAsset\n'
+            'You receive: ${receive.toStringAsFixed(_toAsset == 'USDT' ? 2 : 6)} $_toAsset\n\n'
+            'Rate: 1 ETH = 1000 USDT\n'
+            'Slippage: ${_slippage.toStringAsFixed(1)}%\n'
+            'Network: Sepolia',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Confirm'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true || !mounted) {
+      return;
+    }
+
+    await _executeSwap();
+  }
+
+  Future<void> _executeSwap() async {
+    final amount = _amountController.text.trim();
+
+    setState(() {
+      _loading = true;
+      _txHash = null;
+    });
+
+    try {
+      String txHash;
+
+      if (_fromAsset == 'ETH' && _toAsset == 'USDT') {
+        txHash = await _walletService.swapEthToUsdt(amount);
+      } else {
+        await _walletService.approveUsdtForSwap(amount);
+
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'USDT approval successful. Sending swap transaction...',
+            ),
+          ),
+        );
+
+        txHash = await _walletService.swapUsdtToEth(amount);
+      }
+
+      if (!mounted) return;
+
+      setState(() {
+        _txHash = txHash;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Swap transaction submitted successfully.'),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Swap failed: $e'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final receive = _quote ?? '—';
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Swap'),
@@ -1462,9 +1604,7 @@ class _SwapScreenState extends State<SwapScreen> {
 
           const Text(
             'Swap tokens securely on the Sepolia test network.',
-            style: TextStyle(
-              color: Colors.white70,
-            ),
+            style: TextStyle(color: Colors.white70),
           ),
 
           const SizedBox(height: 28),
@@ -1505,7 +1645,10 @@ class _SwapScreenState extends State<SwapScreen> {
 
                 TextField(
                   controller: _amountController,
-                  keyboardType: const TextInputType.numberWithOptions(
+                  onChanged: (_) => _updateQuote(),
+                  enabled: !_loading,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
                   decoration: const InputDecoration(
@@ -1522,7 +1665,7 @@ class _SwapScreenState extends State<SwapScreen> {
           Center(
             child: IconButton(
               tooltip: 'Switch assets',
-              onPressed: _switchAssets,
+              onPressed: _loading ? null : _switchAssets,
               icon: const Icon(
                 Icons.swap_vert,
                 size: 34,
@@ -1560,10 +1703,10 @@ class _SwapScreenState extends State<SwapScreen> {
                   ),
                 ),
                 const Spacer(),
-                const Text(
-                  'Quote pending',
-                  style: TextStyle(
-                    color: Colors.white70,
+                Text(
+                  receive,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
@@ -1578,39 +1721,78 @@ class _SwapScreenState extends State<SwapScreen> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  _swapInfoRow('Rate', 'Quote pending'),
+                  _swapInfoRow(
+                    'Rate',
+                    '1 ETH = 1000 USDT',
+                  ),
                   const SizedBox(height: 12),
                   _swapInfoRow(
                     'Slippage',
                     '${_slippage.toStringAsFixed(1)}%',
                   ),
                   const SizedBox(height: 12),
-                  _swapInfoRow('Minimum received', '—'),
+                  _swapInfoRow(
+                    'Minimum received',
+                    _quote == null ? '—' : receive,
+                  ),
                   const SizedBox(height: 12),
-                  _swapInfoRow('Network', 'Sepolia'),
+                  _swapInfoRow(
+                    'Network',
+                    'Sepolia',
+                  ),
                 ],
               ),
             ),
           ),
+
+          if (_txHash != null) ...[
+            const SizedBox(height: 20),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Transaction Submitted',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SelectableText(
+                      _txHash!,
+                      style: const TextStyle(
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
 
           const SizedBox(height: 28),
 
           SizedBox(
             height: 54,
             child: ElevatedButton.icon(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Swap engine will be connected next.',
-                    ),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.swap_horiz),
-              label: const Text(
-                'Review Swap',
-                style: TextStyle(fontSize: 16),
+              onPressed: _loading ? null : _reviewSwap,
+              icon: _loading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Icon(Icons.swap_horiz),
+              label: Text(
+                _loading
+                    ? 'Processing...'
+                    : 'Review Swap',
+                style: const TextStyle(fontSize: 16),
               ),
             ),
           ),
@@ -1629,10 +1811,13 @@ class _SwapScreenState extends State<SwapScreen> {
           ),
         ),
         const Spacer(),
-        Text(
-          value,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ],

@@ -549,4 +549,251 @@ return txHash;
     }
   }
 
+  static const String _albarkaSwapContract =
+      '0x55a044246e10A103921CB033effAfA5eecF90524';
+
+  DeployedContract _albarkaSwapContractInstance() {
+    final abi = ContractAbi.fromJson(
+      jsonEncode([
+        {
+          'inputs': [],
+          'name': 'swapEthToUsdt',
+          'outputs': [],
+          'stateMutability': 'payable',
+          'type': 'function',
+        },
+        {
+          'inputs': [
+            {
+              'internalType': 'uint256',
+              'name': 'amountUsdt',
+              'type': 'uint256',
+            },
+          ],
+          'name': 'swapUsdtToEth',
+          'outputs': [],
+          'stateMutability': 'nonpayable',
+          'type': 'function',
+        },
+      ]),
+      'AlbarkaSwapTestnet',
+    );
+
+    return DeployedContract(
+      abi,
+      EthereumAddress.fromHex(_albarkaSwapContract),
+    );
+  }
+
+  DeployedContract _usdtApproveContract() {
+    final abi = ContractAbi.fromJson(
+      jsonEncode([
+        {
+          'inputs': [
+            {
+              'internalType': 'address',
+              'name': 'spender',
+              'type': 'address',
+            },
+            {
+              'internalType': 'uint256',
+              'name': 'amount',
+              'type': 'uint256',
+            },
+          ],
+          'name': 'approve',
+          'outputs': [
+            {
+              'internalType': 'bool',
+              'name': '',
+              'type': 'bool',
+            },
+          ],
+          'stateMutability': 'nonpayable',
+          'type': 'function',
+        },
+      ]),
+      'TetherMock',
+    );
+
+    return DeployedContract(
+      abi,
+      EthereumAddress.fromHex(_sepoliaUsdtContract),
+    );
+  }
+
+  BigInt _parseEthAmountToWei(String amountEth) {
+    final value = amountEth.trim();
+
+    if (!RegExp(r'^\d+(\.\d+)?$').hasMatch(value)) {
+      throw FormatException('Invalid ETH amount: $amountEth');
+    }
+
+    final parts = value.split('.');
+    final whole = parts[0];
+    final fraction = parts.length > 1 ? parts[1] : '';
+
+    if (fraction.length > 18) {
+      throw FormatException(
+        'ETH amount has more than 18 decimal places.',
+      );
+    }
+
+    final padded = fraction.padRight(18, '0');
+
+    final raw = BigInt.parse(whole) *
+            BigInt.from(10).pow(18) +
+        BigInt.parse(padded.isEmpty ? '0' : padded);
+
+    if (raw <= BigInt.zero) {
+      throw FormatException(
+        'ETH amount must be greater than zero.',
+      );
+    }
+
+    return raw;
+  }
+
+  BigInt _parseUsdtAmountToRaw(String amountUsdt) {
+    final value = amountUsdt.trim();
+
+    if (!RegExp(r'^\d+(\.\d+)?$').hasMatch(value)) {
+      throw FormatException('Invalid USDT amount: $amountUsdt');
+    }
+
+    final parts = value.split('.');
+    final whole = parts[0];
+    final fraction = parts.length > 1 ? parts[1] : '';
+
+    if (fraction.length > _usdtDecimals) {
+      throw FormatException(
+        'USDT amount has more than $_usdtDecimals decimal places.',
+      );
+    }
+
+    final padded = fraction.padRight(_usdtDecimals, '0');
+
+    final raw = BigInt.parse(whole) *
+            BigInt.from(10).pow(_usdtDecimals) +
+        BigInt.parse(padded.isEmpty ? '0' : padded);
+
+    if (raw <= BigInt.zero) {
+      throw FormatException(
+        'USDT amount must be greater than zero.',
+      );
+    }
+
+    return raw;
+  }
+
+  Future<String> swapEthToUsdt(String amountEth) async {
+    final privateKey = await getPrivateKey();
+
+    if (privateKey == null || privateKey.isEmpty) {
+      throw Exception('Wallet private key not found.');
+    }
+
+    final amountWei = _parseEthAmountToWei(amountEth);
+    final credentials = EthPrivateKey.fromHex(privateKey);
+
+    final contract = _albarkaSwapContractInstance();
+    final function = contract.function('swapEthToUsdt');
+
+    final transaction = Transaction.callContract(
+      contract: contract,
+      function: function,
+      parameters: const [],
+      value: EtherAmount.fromBigInt(
+        EtherUnit.wei,
+        amountWei,
+      ),
+    );
+
+    final txHash = await _client.sendTransaction(
+      credentials,
+      transaction,
+      chainId: 11155111,
+    );
+
+    await _historyService.addTransaction(
+      txHash: txHash,
+      type: 'Swap',
+      amount: amountEth,
+      address: _albarkaSwapContract,
+      status: 'Success',
+      network: 'Sepolia',
+      asset: 'ETH → USDT',
+    );
+
+    return txHash;
+  }
+
+  Future<String> approveUsdtForSwap(String amountUsdt) async {
+    final privateKey = await getPrivateKey();
+
+    if (privateKey == null || privateKey.isEmpty) {
+      throw Exception('Wallet private key not found.');
+    }
+
+    final amountRaw = _parseUsdtAmountToRaw(amountUsdt);
+    final credentials = EthPrivateKey.fromHex(privateKey);
+
+    final contract = _usdtApproveContract();
+    final function = contract.function('approve');
+
+    final transaction = Transaction.callContract(
+      contract: contract,
+      function: function,
+      parameters: [
+        EthereumAddress.fromHex(_albarkaSwapContract),
+        amountRaw,
+      ],
+    );
+
+    return await _client.sendTransaction(
+      credentials,
+      transaction,
+      chainId: 11155111,
+    );
+  }
+
+  Future<String> swapUsdtToEth(String amountUsdt) async {
+    final privateKey = await getPrivateKey();
+
+    if (privateKey == null || privateKey.isEmpty) {
+      throw Exception('Wallet private key not found.');
+    }
+
+    final amountRaw = _parseUsdtAmountToRaw(amountUsdt);
+    final credentials = EthPrivateKey.fromHex(privateKey);
+
+    final contract = _albarkaSwapContractInstance();
+    final function = contract.function('swapUsdtToEth');
+
+    final transaction = Transaction.callContract(
+      contract: contract,
+      function: function,
+      parameters: [
+        amountRaw,
+      ],
+    );
+
+    final txHash = await _client.sendTransaction(
+      credentials,
+      transaction,
+      chainId: 11155111,
+    );
+
+    await _historyService.addTransaction(
+      txHash: txHash,
+      type: 'Swap',
+      amount: amountUsdt,
+      address: _albarkaSwapContract,
+      status: 'Success',
+      network: 'Sepolia',
+      asset: 'USDT → ETH',
+    );
+
+    return txHash;
+  }
 }
