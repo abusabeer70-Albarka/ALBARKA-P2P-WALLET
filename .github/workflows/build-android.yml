@@ -13,19 +13,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Verify Sepolia RPC
+      - name: Verify Sepolia RPC configuration
         run: |
           git rev-parse --short HEAD
-          grep -n "https://rpc.sepolia.org" lib/services/wallet_service.dart
+          grep -n "ALCHEMY_SEPOLIA_RPC" lib/services/wallet_service.dart
+          grep -n "ALCHEMY_API_KEY" lib/services/wallet_service.dart
+
           if grep -Rni "rcp.sepolia.org" lib; then
             echo "ERROR: Old Sepolia RPC typo found"
             exit 1
           fi
-
-      - name: Test Sepolia DNS
-        run: |
-          getent hosts rpc.sepolia.org
-          curl -I --max-time 10 https://rpc.sepolia.org
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
