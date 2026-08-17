@@ -753,8 +753,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 _RoundAction(
                   icon: Icons.swap_horiz,
                   label: 'Swap',
-                  onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Swap coming soon')),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const SwapScreen(),
+                    ),
                   ),
                 ),
                 _RoundAction(
@@ -1408,6 +1411,234 @@ class _UsdtAssetScreenState extends State<UsdtAssetScreen> {
   }
 }
 
+
+
+class SwapScreen extends StatefulWidget {
+  const SwapScreen({super.key});
+
+  @override
+  State<SwapScreen> createState() => _SwapScreenState();
+}
+
+class _SwapScreenState extends State<SwapScreen> {
+  final _amountController = TextEditingController();
+
+  String _fromAsset = 'ETH';
+  String _toAsset = 'USDT';
+  double _slippage = 0.5;
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    super.dispose();
+  }
+
+  void _switchAssets() {
+    setState(() {
+      final oldFrom = _fromAsset;
+      _fromAsset = _toAsset;
+      _toAsset = oldFrom;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Swap'),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          const Text(
+            'Swap Crypto',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          const Text(
+            'Swap tokens securely on the Sepolia test network.',
+            style: TextStyle(
+              color: Colors.white70,
+            ),
+          ),
+
+          const SizedBox(height: 28),
+
+          const Text(
+            'You Pay',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFF081D49),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.currency_exchange),
+                    const SizedBox(width: 10),
+                    Text(
+                      _fromAsset,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 14),
+
+                TextField(
+                  controller: _amountController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(
+                    hintText: '0.0',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          Center(
+            child: IconButton(
+              tooltip: 'Switch assets',
+              onPressed: _switchAssets,
+              icon: const Icon(
+                Icons.swap_vert,
+                size: 34,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          const Text(
+            'You Receive',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFF081D49),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.account_balance_wallet),
+                const SizedBox(width: 10),
+                Text(
+                  _toAsset,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Spacer(),
+                const Text(
+                  'Quote pending',
+                  style: TextStyle(
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 28),
+
+          Card(
+            color: const Color(0xFF081D49),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  _swapInfoRow('Rate', 'Quote pending'),
+                  const SizedBox(height: 12),
+                  _swapInfoRow(
+                    'Slippage',
+                    '${_slippage.toStringAsFixed(1)}%',
+                  ),
+                  const SizedBox(height: 12),
+                  _swapInfoRow('Minimum received', '—'),
+                  const SizedBox(height: 12),
+                  _swapInfoRow('Network', 'Sepolia'),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 28),
+
+          SizedBox(
+            height: 54,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Swap engine will be connected next.',
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.swap_horiz),
+              label: const Text(
+                'Review Swap',
+                style: TextStyle(fontSize: 16),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _swapInfoRow(String title, String value) {
+    return Row(
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white70,
+          ),
+        ),
+        const Spacer(),
+        Text(
+          value,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+}
 
 class SendUsdtScreen extends StatefulWidget {
   final String address;
