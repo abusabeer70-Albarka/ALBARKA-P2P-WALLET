@@ -19,7 +19,7 @@ class WalletService {
 
   // Sepolia test USDT (NOT real Tether USDT).
   static const String _sepoliaUsdtContract =
-      '0x79af4e49901b107ece18b9fa79d99ff502e11c97';
+      '0xcF8bc22eF342820C3Bceb7202F987075Cef1c859';
 
   static const int _usdtDecimals = 6;
   final Web3Client _client =
@@ -550,7 +550,7 @@ return txHash;
   }
 
   static const String _albarkaSwapContract =
-      '0x55a044246e10A103921CB033effAfA5eecF90524';
+      '0xDF6A4c909B3d789d7eD076f409d7b57ecF0DD175';
 
   DeployedContract _albarkaSwapContractInstance() {
     final abi = ContractAbi.fromJson(
