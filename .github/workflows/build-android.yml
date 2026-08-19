@@ -19,7 +19,7 @@ jobs:
           grep -n "ALCHEMY_SEPOLIA_RPC" lib/services/wallet_service.dart
           grep -n "ALCHEMY_API_KEY" lib/services/wallet_service.dart
 
-          if grep -Rni "rcp.sepolia.org" lib; then
+          if grep -Rni "rpc.sepolia.org" lib; then
             echo "ERROR: Old Sepolia RPC typo found"
             exit 1
           fi
@@ -124,8 +124,8 @@ jobs:
       - name: Inspect APK for Sepolia RPC
         run: |
           echo "Checking APK for old RPC..."
-          if strings build/app/outputs/flutter-apk/app-release.apk | grep -F "rcp.sepolia.org"; then
-            echo "ERROR: APK contains old RPC: rcp.sepolia.org"
+          if strings build/app/outputs/flutter-apk/app-release.apk | grep -F "rpc.sepolia.org"; then
+            echo "ERROR: APK contains old RPC: rpc.sepolia.org"
             exit 1
           fi
 
