@@ -1,4 +1,7 @@
 import 'services/transaction_history_service.dart';
+import 'models/asset_catalog.dart';
+import 'models/wallet_asset.dart';
+import 'widgets/asset_logo.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
@@ -724,10 +727,34 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final assets = [
-      ('Bitcoin', 'BTC', '0.000000', Icons.currency_bitcoin),
-      ('Ethereum', 'ETH', _ethBalance, Icons.diamond_outlined),
-      ('BNB', 'BNB', '0.000000', Icons.token),
-      ('USDT', 'USDT', _usdtBalance, Icons.attach_money),
+      (
+        asset: AssetCatalog.bitcoin,
+        balance: '0.000000',
+      ),
+      (
+        asset: AssetCatalog.ethereum,
+        balance: _ethBalance,
+      ),
+      (
+        asset: AssetCatalog.bnb,
+        balance: '0.000000',
+      ),
+      (
+        asset: AssetCatalog.solana,
+        balance: '0.000000',
+      ),
+      (
+        asset: AssetCatalog.ton,
+        balance: '0.000000',
+      ),
+      (
+        asset: AssetCatalog.tron,
+        balance: '0.000000',
+      ),
+      (
+        asset: AssetCatalog.usdt,
+        balance: _usdtBalance,
+      ),
     ];
 
     return Scaffold(
@@ -866,35 +893,52 @@ class _HomeScreenState extends State<HomeScreen> {
           const Text('Assets', style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold)),
           const SizedBox(height: 10),
           ...assets.map(
-            (a) => Card(
-              color: const Color(0xFF081D49),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: const Color(0xFF123D83),
-                  child: Icon(a.$4, color: Colors.white),
-                ),
-                title: Text(a.$1),
-                subtitle: Text(a.$2),
-                trailing: Text(a.$3, style: const TextStyle(fontWeight: FontWeight.bold)),
-                onTap: a.$2 == 'ETH' && _address != null
-                    ? () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => EthereumAssetScreen(address: _address!),
-                          ),
-                        )
-                    : a.$2 == 'USDT' && _address != null
-                        ? () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => UsdtAssetScreen(
-                                  address: _address!,
-                                ),
+            (item) {
+              final asset = item.asset;
+              final balance = item.balance;
+
+              return Card(
+                color: const Color(0xFF081D49),
+                child: ListTile(
+                  leading: AssetLogo(
+                    assetPath: asset.logoAsset,
+                    size: 46,
+                  ),
+                  title: Text(
+                    asset.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  subtitle: Text(asset.symbol),
+                  trailing: Text(
+                    balance,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  onTap: asset.symbol == 'ETH' && _address != null
+                      ? () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => EthereumAssetScreen(
+                                address: _address!,
                               ),
-                            )
-                        : null,
-              ),
-            ),
+                            ),
+                          )
+                      : asset.symbol == 'USDT' && _address != null
+                          ? () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => UsdtAssetScreen(
+                                    address: _address!,
+                                  ),
+                                ),
+                              )
+                          : null,
+                ),
+              );
+            },
           ),
         ],
       ),
