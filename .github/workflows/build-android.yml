@@ -39,7 +39,22 @@ jobs:
 
       - name: Ensure Android internet permission
         run: |
-          sed -i '/<manifest /a\    <uses-permission android:name="android.permission.INTERNET" />' android/app/src/main/AndroidManifest.xml
+          python3 - <<'PYTHON'
+          from pathlib import Path
+
+          p = Path("android/app/src/main/AndroidManifest.xml")
+          s = p.read_text()
+
+          permission = '    <uses-permission android:name="android.permission.INTERNET" />'
+
+          if "android.permission.INTERNET" not in s:
+              s = s.replace("<manifest ", "<manifest ", 1)
+              manifest_end = s.find(">")
+              s = s[:manifest_end + 1] + "\n" + permission + s[manifest_end + 1:]
+              p.write_text(s)
+
+          print("Android INTERNET permission verified.")
+          PYTHON
 
       - name: Set ALBARKA P2P app icon
         run: |
