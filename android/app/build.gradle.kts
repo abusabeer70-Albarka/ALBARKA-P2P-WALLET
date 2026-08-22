@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.example.albarka_p2p_wallet"
-    compileSdk = 34
+    compileSdk = 35
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
